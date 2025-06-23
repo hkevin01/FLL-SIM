@@ -6,10 +6,10 @@ This script helps users set up FLL-Sim, configure their environment,
 and get started with the simulator quickly.
 """
 
-import os
-import sys
-import subprocess
 import argparse
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -299,11 +299,11 @@ def run_initial_tests():
         sys.path.insert(0, "src")
         
         print("  Testing core imports...")
-        from fll_sim.core.simulator import Simulator, SimulationConfig
-        from fll_sim.robot.robot import Robot, RobotConfig
-        from fll_sim.robot.pybricks_api import PybricksRobot
+        from fll_sim.core.simulator import SimulationConfig, Simulator
         from fll_sim.environment.game_map import GameMap
         from fll_sim.environment.mission import MissionManager
+        from fll_sim.robot.pybricks_api import PybricksRobot
+        from fll_sim.robot.robot import Robot, RobotConfig
         
         print("  Testing configuration system...")
         from fll_sim.config.config_manager import ConfigManager

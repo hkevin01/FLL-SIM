@@ -6,12 +6,12 @@ including scoring logic and progress tracking. Inspired by real FLL competition
 missions and Pybricks robot control patterns.
 """
 
-import time
-import math
-from enum import Enum
-from typing import Dict, List, Tuple, Optional, Any, Callable, Union
-from dataclasses import dataclass, field
 import logging
+import math
+import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 

@@ -10,22 +10,26 @@ This script demonstrates the complete FLL-Sim system with:
 - AI-driven path planning example
 """
 
-import sys
-import os
 import argparse
+import os
+import sys
 from typing import Optional
+
 import pygame
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from fll_sim.core.simulator import Simulator, SimulationConfig
-from fll_sim.robot.robot import Robot, RobotConfig  
-from fll_sim.robot.pybricks_api import PybricksRobot, PybricksConfig, FLLMissions
-from fll_sim.environment.game_map import GameMap, FLLGameMap
+from fll_sim.core.simulator import SimulationConfig, Simulator
+from fll_sim.environment.game_map import FLLGameMap, GameMap
 from fll_sim.environment.mission import (
-    MissionManager, FLLMissionFactory, MissionType, MissionDifficulty
+    FLLMissionFactory,
+    MissionDifficulty,
+    MissionManager,
+    MissionType,
 )
+from fll_sim.robot.pybricks_api import FLLMissions, PybricksConfig, PybricksRobot
+from fll_sim.robot.robot import Robot, RobotConfig
 from fll_sim.sensors.color_sensor import Color
 
 

@@ -6,15 +6,15 @@ coming from LEGO MINDSTORMS and Pybricks, making the transition to
 simulation seamless and educational.
 """
 
-import time
 import math
-from typing import Optional, List, Tuple, Union, Callable
-from enum import Enum
+import time
 from dataclasses import dataclass
+from enum import Enum
+from typing import Callable, List, Optional, Tuple, Union
 
+from ..core.simulator import Simulator
 from ..robot.robot import Robot, RobotConfig
 from ..sensors.color_sensor import Color
-from ..core.simulator import Simulator
 
 
 class Direction(Enum):

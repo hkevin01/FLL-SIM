@@ -5,16 +5,17 @@ This module provides configuration loading, validation, and management
 for different simulation scenarios, robot setups, and FLL seasons.
 """
 
-import yaml
 import json
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import os
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from ..robot.robot import RobotConfig
+import yaml
+
 from ..core.simulator import SimulationConfig
 from ..robot.pybricks_api import PybricksConfig
+from ..robot.robot import RobotConfig
 
 
 @dataclass

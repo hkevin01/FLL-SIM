@@ -6,16 +6,17 @@ including obstacles, missions, and scoring areas. Enhanced with
 mission integration and FLL-specific features.
 """
 
-import math
-import yaml
 import json
-from typing import Dict, List, Tuple, Optional, Any
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
-import pymunk
-import pygame
+from typing import Any, Dict, List, Optional, Tuple
 
-from .mission import Mission, MissionManager, MissionStatus, FLLMissionFactory
+import pygame
+import pymunk
+import yaml
+
+from .mission import FLLMissionFactory, Mission, MissionManager, MissionStatus
 
 
 @dataclass
@@ -224,7 +225,7 @@ class GameMap:
     def _setup_sample_missions(self):
         """Setup sample missions for demonstration."""
         from .mission import Mission, MissionType
-        
+
         # Mission 1: Visit red zone
         mission1 = Mission(
             name="Visit Red Zone",

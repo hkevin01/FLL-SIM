@@ -7,11 +7,12 @@ coordinate transformations, and visual effects.
 """
 
 import math
-from typing import Tuple, Optional, List
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
+
 import pygame
 import pymunk
 import pymunk.pygame_util
-from dataclasses import dataclass
 
 
 @dataclass
