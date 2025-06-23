@@ -1,0 +1,21 @@
+pygame>=2.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+pymunk>=6.2.0
+Pillow>=9.0.0
+pyyaml>=6.0
+click>=8.0.0
+dataclasses-json>=0.5.7
+
+# Development dependencies
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=22.0.0
+flake8>=5.0.0
+mypy>=1.0.0
+pre-commit>=2.20.0
+
+# Optional visualization dependencies
+pygame-gui>=0.6.0
+moderngl>=5.6.0
+PyOpenGL>=3.1.0
