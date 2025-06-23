@@ -2,18 +2,20 @@
 Game map implementation for FLL challenges.
 
 This module defines the game map/field where the robot operates,
-including obstacles, missions, and scoring areas.
+including obstacles, missions, and scoring areas. Enhanced with
+mission integration and FLL-specific features.
 """
 
 import math
 import yaml
+import json
 from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass, field
 from pathlib import Path
 import pymunk
 import pygame
 
-from .mission import Mission, MissionStatus
+from .mission import Mission, MissionManager, MissionStatus, FLLMissionFactory
 
 
 @dataclass
@@ -35,9 +37,13 @@ class MapConfig:
     show_grid: bool = True
     grid_spacing: float = 100.0  # mm
     grid_color: Tuple[int, int, int] = (200, 200, 200)
+    
+    # Mission areas
+    show_mission_areas: bool = True
+    mission_area_alpha: int = 128  # Transparency for mission overlays
 
 
-@dataclass 
+@dataclass
 class Obstacle:
     """Physical obstacle on the game map."""
     
@@ -50,6 +56,8 @@ class Obstacle:
     color: Tuple[int, int, int] = (100, 50, 0)  # Brown
     is_movable: bool = False  # Can be pushed by robot
     mass: float = 1.0  # kg (for movable objects)
+    mission_related: bool = False  # Part of a mission
+    object_id: Optional[str] = None  # Unique ID for mission tracking
 
 
 @dataclass
@@ -63,21 +71,40 @@ class ColorZone:
     height: float  # Height in mm
     color: Tuple[int, int, int]  # RGB color
     angle: float = 0.0  # Rotation angle in degrees
+    sensor_value: str = ""  # What color sensor should read
+
+
+@dataclass
+class MissionArea:
+    """Visual representation of mission target areas."""
+    
+    mission_id: str
+    area_type: str  # "circle", "rectangle", "polygon"
+    parameters: Dict[str, Any]  # Area-specific parameters
+    color: Tuple[int, int, int] = (0, 255, 0)  # Green
+    active_color: Tuple[int, int, int] = (255, 255, 0)  # Yellow when active
+    completed_color: Tuple[int, int, int] = (0, 255, 255)  # Cyan when completed
 
 
 class GameMap:
     """
     Game map representing the FLL playing field.
     
+    Enhanced with mission integration, real-time scoring,
+    and FLL-specific features based on competition requirements.
+    
     The map includes:
     - Physical boundaries and obstacles
     - Mission areas and scoring zones
     - Color-coded areas for sensor detection
     - Starting positions for robots
+    - Real-time mission progress tracking
     """
     
-    # Collision type for map obstacles
-    obstacle_collision_type = 2
+    # Collision types
+    BORDER_COLLISION_TYPE = 1
+    OBSTACLE_COLLISION_TYPE = 2
+    MISSION_OBJECT_COLLISION_TYPE = 3
     
     def __init__(self, config: Optional[MapConfig] = None):
         """
@@ -91,13 +118,27 @@ class GameMap:
         # Map elements
         self.obstacles: List[Obstacle] = []
         self.color_zones: List[ColorZone] = []
-        self.missions: List[Mission] = []
+        self.mission_areas: List[MissionArea] = []
+        
+        # Mission management
+        self.mission_manager = MissionManager()
         
         # Physics bodies (will be populated when added to space)
         self.border_bodies: List[pymunk.Body] = []
         self.obstacle_bodies: List[pymunk.Body] = []
+        self.mission_object_bodies: Dict[str, pymunk.Body] = {}
         
         # Starting positions
+        self.robot_start_positions: List[Tuple[float, float, float]] = [
+            (200, 600, 0),  # Default start position (x, y, angle)
+        ]
+        
+        # Mission tracking
+        self.mission_objects: Dict[str, Dict[str, Any]] = {}  # Track movable mission objects
+        
+        # Rendering surfaces
+        self.base_surface: Optional[pygame.Surface] = None
+        self.mission_overlay: Optional[pygame.Surface] = None
         self.start_positions: Dict[str, Tuple[float, float, float]] = {}
         
         # Map metadata
@@ -208,294 +249,403 @@ class GameMap:
         self.add_mission(mission1)
         self.add_mission(mission2)
     
-    def add_obstacle(self, obstacle: Obstacle):
+    def load_fll_season_map(self, season: str = "2024-SUBMERGED") -> None:
+        """
+        Load a complete FLL season map with missions and obstacles.
+        
+        Args:
+            season: FLL season identifier
+        """
+        if season == "2024-SUBMERGED":
+            self._create_submerged_2024_map()
+        else:
+            raise ValueError(f"Unknown FLL season: {season}")
+            
+        # Load corresponding missions
+        self.mission_manager.load_fll_season(season)
+        
+        # Create mission area overlays
+        self._create_mission_overlays()
+
+    def _create_submerged_2024_map(self) -> None:
+        """Create the 2024 SUBMERGED season game map."""
+        
+        # Clear existing elements
+        self.obstacles.clear()
+        self.color_zones.clear()
+        self.mission_areas.clear()
+        
+        # Add FLL 2024 SUBMERGED obstacles and features
+        
+        # Base Station area (starting area)
+        self.add_color_zone(ColorZone(
+            name="base_station",
+            x=200, y=600, width=400, height=400,
+            color=(240, 240, 240),  # Light gray
+            sensor_value="white"
+        ))
+        
+        # Coral Nursery area
+        self.add_obstacle(Obstacle(
+            name="coral_nursery_walls",
+            x=1800, y=900, width=200, height=200,
+            color=(139, 69, 19),  # Brown
+            is_movable=False
+        ))
+        
+        # Coral samples (movable mission objects)
+        self.add_obstacle(Obstacle(
+            name="coral_sample_1",
+            x=1200, y=800, width=50, height=50,
+            color=(255, 127, 80),  # Coral color
+            is_movable=True,
+            mass=0.2,
+            mission_related=True,
+            object_id="coral_sample"
+        ))
+        
+        # Shark area
+        self.add_obstacle(Obstacle(
+            name="shark_obstacle",
+            x=600, y=400, width=100, height=200,
+            color=(70, 70, 70),  # Dark gray
+            is_movable=True,
+            mass=0.5,
+            mission_related=True,
+            object_id="shark"
+        ))
+        
+        # Underwater obstacles
+        obstacles_positions = [
+            (800, 300, 80, 60),
+            (1000, 500, 60, 100),
+            (1400, 700, 90, 70),
+            (1600, 300, 70, 80)
+        ]
+        
+        for i, (x, y, w, h) in enumerate(obstacles_positions):
+            self.add_obstacle(Obstacle(
+                name=f"underwater_obstacle_{i+1}",
+                x=x, y=y, width=w, height=h,
+                color=(0, 100, 150),  # Deep blue
+                is_movable=False
+            ))
+            
+        # Color zones for navigation
+        color_zones = [
+            ("red_zone", 1000, 200, 100, 100, (255, 0, 0), "red"),
+            ("blue_zone", 1200, 400, 100, 100, (0, 0, 255), "blue"),
+            ("green_zone", 1400, 600, 100, 100, (0, 255, 0), "green"),
+            ("yellow_zone", 1600, 800, 100, 100, (255, 255, 0), "yellow")
+        ]
+        
+        for name, x, y, w, h, color, sensor_val in color_zones:
+            self.add_color_zone(ColorZone(
+                name=name, x=x, y=y, width=w, height=h,
+                color=color, sensor_value=sensor_val
+            ))
+            
+        # Kraken treasure area (precision parking)
+        self.add_color_zone(ColorZone(
+            name="treasure_marker",
+            x=1200, y=400, width=30, height=30,
+            color=(0, 0, 255),  # Blue treasure marker
+            sensor_value="blue"
+        ))
+
+    def _create_mission_overlays(self) -> None:
+        """Create visual overlays for mission areas."""
+        
+        # Get missions from mission manager
+        for mission in self.mission_manager.missions.values():
+            
+            # Extract mission areas from conditions
+            for condition in mission.conditions:
+                if condition.condition_type in ["robot_in_area", "object_in_area", "robot_at_position"]:
+                    
+                    area_params = self._extract_area_from_condition(condition)
+                    if area_params:
+                        mission_area = MissionArea(
+                            mission_id=mission.mission_id,
+                            area_type=area_params["type"],
+                            parameters=area_params,
+                            color=self._get_mission_color(mission.difficulty)
+                        )
+                        self.mission_areas.append(mission_area)
+
+    def _extract_area_from_condition(self, condition) -> Optional[Dict[str, Any]]:
+        """Extract area parameters from mission condition."""
+        params = condition.parameters
+        
+        if "circle" in params:
+            return {
+                "type": "circle",
+                "x": params["circle"]["x"],
+                "y": params["circle"]["y"], 
+                "radius": params["circle"]["radius"]
+            }
+        elif "rectangle" in params:
+            return {
+                "type": "rectangle",
+                "x": params["rectangle"]["x"],
+                "y": params["rectangle"]["y"],
+                "width": params["rectangle"]["width"],
+                "height": params["rectangle"]["height"]
+            }
+        elif "x" in params and "y" in params:
+            return {
+                "type": "point",
+                "x": params["x"],
+                "y": params["y"],
+                "tolerance": params.get("tolerance", 10.0)
+            }
+            
+        return None
+
+    def _get_mission_color(self, difficulty) -> Tuple[int, int, int]:
+        """Get color based on mission difficulty."""
+        from .mission import MissionDifficulty
+        
+        color_map = {
+            MissionDifficulty.BEGINNER: (0, 255, 0),     # Green
+            MissionDifficulty.INTERMEDIATE: (255, 165, 0), # Orange  
+            MissionDifficulty.ADVANCED: (255, 0, 0),     # Red
+            MissionDifficulty.EXPERT: (128, 0, 128)      # Purple
+        }
+        return color_map.get(difficulty, (128, 128, 128))
+
+    def add_obstacle(self, obstacle: Obstacle) -> None:
         """Add an obstacle to the map."""
         self.obstacles.append(obstacle)
-    
-    def add_color_zone(self, zone: ColorZone):
-        """Add a color zone to the map.""" 
-        self.color_zones.append(zone)
-    
-    def add_mission(self, mission: Mission):
-        """Add a mission to the map."""
-        self.missions.append(mission)
-    
-    def get_starting_position(self, position_name: str = "home") -> Tuple[float, float, float]:
-        """
-        Get a starting position by name.
         
-        Args:
-            position_name: Name of starting position
-            
-        Returns:
-            (x, y, angle) tuple
-        """
-        return self.start_positions.get(position_name, (0, 0, 0))
-    
-    def add_to_space(self, space: pymunk.Space):
-        """Add map elements to the physics space."""
-        # Add obstacles to physics
-        for obstacle in self.obstacles:
-            body, shape = self._create_obstacle_physics(obstacle)
-            space.add(body, shape)
-            self.obstacle_bodies.append(body)
-    
-    def _create_obstacle_physics(self, obstacle: Obstacle) -> Tuple[pymunk.Body, pymunk.Shape]:
-        """
-        Create physics body and shape for an obstacle.
-        
-        Args:
-            obstacle: Obstacle to create physics for
-            
-        Returns:
-            (body, shape) tuple
-        """
-        if obstacle.is_movable:
-            # Dynamic body for movable objects
-            moment = pymunk.moment_for_box(obstacle.mass, (obstacle.width, obstacle.height))
-            body = pymunk.Body(obstacle.mass, moment)
-        else:
-            # Static body for fixed obstacles
-            body = pymunk.Body(body_type=pymunk.Body.STATIC)
-        
-        body.position = obstacle.x, obstacle.y
-        body.angle = math.radians(obstacle.angle)
-        
-        # Create box shape
-        shape = pymunk.Poly.create_box(body, (obstacle.width, obstacle.height))
-        shape.friction = 0.7
-        shape.collision_type = self.obstacle_collision_type
-        
-        return body, shape
-    
-    def get_color_at_position(self, x: float, y: float) -> Tuple[int, int, int]:
-        """
-        Get the color at a specific position on the map.
-        
-        Args:
-            x: X coordinate in mm
-            y: Y coordinate in mm
-            
-        Returns:
-            RGB color tuple
-        """
-        # Check color zones
-        for zone in self.color_zones:
-            if self._point_in_rectangle(x, y, zone):
-                return zone.color
-        
-        # Default to surface color
-        return self.config.surface_color
-    
-    def _point_in_rectangle(self, x: float, y: float, rect) -> bool:
-        """
-        Check if a point is inside a rectangle.
-        
-        Args:
-            x: Point X coordinate
-            y: Point Y coordinate
-            rect: Rectangle object with x, y, width, height, angle
-            
-        Returns:
-            True if point is inside rectangle
-        """
-        # Transform point to rectangle's local coordinate system
-        dx = x - rect.x
-        dy = y - rect.y
-        
-        # Rotate by negative angle to align with rectangle
-        angle_rad = -math.radians(rect.angle)
-        local_x = dx * math.cos(angle_rad) - dy * math.sin(angle_rad)
-        local_y = dx * math.sin(angle_rad) + dy * math.cos(angle_rad)
-        
-        # Check if inside axis-aligned rectangle
-        return (abs(local_x) <= rect.width / 2 and 
-                abs(local_y) <= rect.height / 2)
-    
-    def update(self, dt: float):
-        """Update the map state (missions, animations, etc.)."""
-        # Update missions
-        for mission in self.missions:
-            mission.update(dt)
-    
-    def render(self, renderer):
-        """Render the game map."""
-        # Render field surface
-        self._render_surface(renderer)
-        
-        # Render grid if enabled
-        if self.config.show_grid:
-            self._render_grid(renderer)
-        
-        # Render color zones
-        for zone in self.color_zones:
-            self._render_color_zone(renderer, zone)
-        
-        # Render obstacles
-        for obstacle in self.obstacles:
-            self._render_obstacle(renderer, obstacle)
-        
-        # Render missions
-        for mission in self.missions:
-            mission.render(renderer)
-        
-        # Render starting positions
-        self._render_start_positions(renderer)
-    
-    def _render_surface(self, renderer):
-        """Render the field surface."""
-        w = self.config.width
-        h = self.config.height
-        
-        renderer.draw_rect(
-            0, 0, w, h, 0,
-            self.config.surface_color
-        )
-    
-    def _render_grid(self, renderer):
-        """Render measurement grid."""
-        w = self.config.width
-        h = self.config.height
-        spacing = self.config.grid_spacing
-        
-        # Vertical lines
-        x = -w/2
-        while x <= w/2:
-            renderer.draw_line(
-                (x, -h/2), (x, h/2),
-                self.config.grid_color, 1
-            )
-            x += spacing
-        
-        # Horizontal lines  
-        y = -h/2
-        while y <= h/2:
-            renderer.draw_line(
-                (-w/2, y), (w/2, y),
-                self.config.grid_color, 1
-            )
-            y += spacing
-    
-    def _render_color_zone(self, renderer, zone: ColorZone):
-        """Render a color zone."""
-        renderer.draw_rect(
-            zone.x, zone.y,
-            zone.width, zone.height,
-            zone.angle, zone.color
-        )
-        
-        # Draw zone label
-        renderer.draw_text(
-            zone.name,
-            zone.x, zone.y,
-            (255, 255, 255), size=14
-        )
-    
-    def _render_obstacle(self, renderer, obstacle: Obstacle):
-        """Render an obstacle."""
-        renderer.draw_rect(
-            obstacle.x, obstacle.y,
-            obstacle.width, obstacle.height,
-            obstacle.angle, obstacle.color
-        )
-        
-        # Draw obstacle label for non-border objects
-        if not obstacle.name.endswith("_border"):
-            renderer.draw_text(
-                obstacle.name,
-                obstacle.x, obstacle.y,
-                (255, 255, 255), size=12
-            )
-    
-    def _render_start_positions(self, renderer):
-        """Render starting positions."""
-        for name, (x, y, angle) in self.start_positions.items():
-            # Draw start position marker
-            renderer.draw_circle(x, y, 30, (0, 255, 0), filled=False, width=3)
-            
-            # Draw direction arrow
-            angle_rad = math.radians(angle)
-            end_x = x + math.cos(angle_rad) * 40
-            end_y = y + math.sin(angle_rad) * 40
-            renderer.draw_line((x, y), (end_x, end_y), (0, 255, 0), 3)
-            
-            # Draw label
-            renderer.draw_text(name, x, y - 50, (0, 255, 0), size=14)
-    
-    def reset(self):
-        """Reset the map to initial state.""" 
-        # Reset missions
-        for mission in self.missions:
-            mission.reset()
-        
-        # Reset movable obstacles to initial positions
-        # (This would need to store initial positions)
-        pass
-    
-    def get_mission_states(self) -> Dict[str, Any]:
-        """Get current state of all missions."""
-        return {
-            mission.name: {
-                "status": mission.status,
-                "progress": mission.progress,
-                "points_earned": mission.points_earned,
-                "time_elapsed": mission.time_elapsed
+        # Track mission-related objects
+        if obstacle.mission_related and obstacle.object_id:
+            self.mission_objects[obstacle.object_id] = {
+                "x": obstacle.x,
+                "y": obstacle.y,
+                "width": obstacle.width,
+                "height": obstacle.height,
+                "is_movable": obstacle.is_movable,
+                "name": obstacle.name
             }
-            for mission in self.missions
-        }
-    
-    def calculate_total_score(self) -> int:
-        """Calculate total score from completed missions."""
-        return sum(mission.points_earned for mission in self.missions)
-    
-    @classmethod
-    def load_from_file(cls, file_path: str) -> 'GameMap':
+
+    def add_color_zone(self, zone: ColorZone) -> None:
+        """Add a color zone to the map."""
+        self.color_zones.append(zone)
+
+    def get_color_at_position(self, x: float, y: float) -> Optional[str]:
         """
-        Load a game map from a YAML configuration file.
+        Get the color sensor reading at a specific position.
         
         Args:
-            file_path: Path to YAML configuration file
+            x, y: Position coordinates in mm
             
         Returns:
-            Loaded GameMap instance
+            Color name if position is in a color zone, None otherwise
         """
-        with open(file_path, 'r') as f:
-            data = yaml.safe_load(f)
+        for zone in self.color_zones:
+            # Check if position is within zone
+            left = zone.x - zone.width / 2
+            right = zone.x + zone.width / 2
+            top = zone.y - zone.height / 2
+            bottom = zone.y + zone.height / 2
+            
+            if left <= x <= right and top <= y <= bottom:
+                return zone.sensor_value or "unknown"
+                
+        return None
+
+    def get_obstacles_near_position(self, x: float, y: float, radius: float) -> List[Obstacle]:
+        """
+        Get obstacles within a certain radius of a position.
         
-        # Create map with loaded configuration
-        game_map = cls()
+        Args:
+            x, y: Center position
+            radius: Search radius in mm
+            
+        Returns:
+            List of nearby obstacles
+        """
+        nearby = []
+        for obstacle in self.obstacles:
+            distance = math.sqrt((obstacle.x - x)**2 + (obstacle.y - y)**2)
+            if distance <= radius:
+                nearby.append(obstacle)
+        return nearby
+
+    def is_position_valid(self, x: float, y: float, robot_radius: float = 50.0) -> bool:
+        """
+        Check if a position is valid for robot placement (no collisions).
         
-        # Load basic properties
-        game_map.name = data.get('name', 'Loaded Map')
-        game_map.season = data.get('season', '2024')
-        game_map.description = data.get('description', '')
+        Args:
+            x, y: Position to check
+            robot_radius: Robot collision radius
+            
+        Returns:
+            True if position is valid
+        """
+        # Check boundaries
+        if (x - robot_radius < 0 or x + robot_radius > self.config.width or
+            y - robot_radius < 0 or y + robot_radius > self.config.height):
+            return False
+            
+        # Check obstacle collisions
+        for obstacle in self.obstacles:
+            if not obstacle.is_movable:  # Only check fixed obstacles
+                # Simple box collision check
+                obstacle_left = obstacle.x - obstacle.width / 2
+                obstacle_right = obstacle.x + obstacle.width / 2
+                obstacle_top = obstacle.y - obstacle.height / 2
+                obstacle_bottom = obstacle.y + obstacle.height / 2
+                
+                robot_left = x - robot_radius
+                robot_right = x + robot_radius
+                robot_top = y - robot_radius
+                robot_bottom = y + robot_radius
+                
+                if (robot_right >= obstacle_left and robot_left <= obstacle_right and
+                    robot_bottom >= obstacle_top and robot_top <= obstacle_bottom):
+                    return False
+                    
+        return True
+
+    def get_optimal_path(self, start: Tuple[float, float], 
+                        end: Tuple[float, float]) -> List[Tuple[float, float]]:
+        """
+        Calculate optimal path between two points avoiding obstacles.
+        This is a placeholder for future AI pathfinding integration.
+        
+        Args:
+            start: Starting position (x, y)
+            end: Target position (x, y)
+            
+        Returns:
+            List of waypoints forming optimal path
+        """
+        # Simple straight-line path for now
+        # Future: Implement A* or other pathfinding algorithm
+        return [start, end]
+
+    def export_map_config(self, filename: str) -> None:
+        """Export current map configuration to file."""
+        config_data = {
+            "config": {
+                "width": self.config.width,
+                "height": self.config.height,
+                "border_thickness": self.config.border_thickness
+            },
+            "obstacles": [
+                {
+                    "name": obs.name,
+                    "x": obs.x, "y": obs.y,
+                    "width": obs.width, "height": obs.height,
+                    "angle": obs.angle,
+                    "color": obs.color,
+                    "is_movable": obs.is_movable,
+                    "mass": obs.mass,
+                    "mission_related": obs.mission_related,
+                    "object_id": obs.object_id
+                }
+                for obs in self.obstacles
+            ],
+            "color_zones": [
+                {
+                    "name": zone.name,
+                    "x": zone.x, "y": zone.y,
+                    "width": zone.width, "height": zone.height,
+                    "color": zone.color,
+                    "sensor_value": zone.sensor_value
+                }
+                for zone in self.color_zones
+            ],
+            "robot_start_positions": self.robot_start_positions
+        }
+        
+        with open(filename, 'w') as f:
+            json.dump(config_data, f, indent=2)
+
+    def load_map_config(self, filename: str) -> None:
+        """Load map configuration from file."""
+        with open(filename, 'r') as f:
+            config_data = json.load(f)
+            
+        # Update config
+        config_dict = config_data.get("config", {})
+        self.config.width = config_dict.get("width", self.config.width)
+        self.config.height = config_dict.get("height", self.config.height)
         
         # Load obstacles
-        for obs_data in data.get('obstacles', []):
-            obstacle = Obstacle(**obs_data)
-            game_map.add_obstacle(obstacle)
-        
-        # Load color zones
-        for zone_data in data.get('color_zones', []):
-            zone = ColorZone(**zone_data)
-            game_map.add_color_zone(zone)
-        
-        # Load start positions
-        game_map.start_positions = data.get('start_positions', {})
-        
-        return game_map
-    
-    @classmethod
-    def load_season(cls, season_name: str) -> 'GameMap':
-        """
-        Load a predefined season map.
-        
-        Args:
-            season_name: Name of the season (e.g., "2024-submerged")
+        self.obstacles.clear()
+        for obs_data in config_data.get("obstacles", []):
+            obstacle = Obstacle(
+                name=obs_data["name"],
+                x=obs_data["x"], y=obs_data["y"],
+                width=obs_data["width"], height=obs_data["height"],
+                angle=obs_data.get("angle", 0.0),
+                color=tuple(obs_data["color"]),
+                is_movable=obs_data.get("is_movable", False),
+                mass=obs_data.get("mass", 1.0),
+                mission_related=obs_data.get("mission_related", False),
+                object_id=obs_data.get("object_id")
+            )
+            self.add_obstacle(obstacle)
             
-        Returns:
-            GameMap for the specified season
-        """
-        # For now, return a default map
-        # In a full implementation, this would load from predefined configs
-        return cls()
+        # Load color zones
+        self.color_zones.clear()
+        for zone_data in config_data.get("color_zones", []):
+            zone = ColorZone(
+                name=zone_data["name"],
+                x=zone_data["x"], y=zone_data["y"],
+                width=zone_data["width"], height=zone_data["height"],
+                color=tuple(zone_data["color"]),
+                sensor_value=zone_data.get("sensor_value", "")
+            )
+            self.add_color_zone(zone)
+            
+        # Load start positions
+        self.robot_start_positions = config_data.get("robot_start_positions", [(200, 600, 0)])
+
+    def __repr__(self) -> str:
+        return (f"GameMap(size={self.config.width}x{self.config.height}, "
+                f"obstacles={len(self.obstacles)}, "
+                f"color_zones={len(self.color_zones)}, "
+                f"missions={len(self.mission_manager.missions)})")
+
+
+# Example usage
+if __name__ == "__main__":
+    # Create a game map
+    game_map = GameMap()
+    
+    # Load FLL 2024 SUBMERGED season
+    game_map.load_fll_season_map("2024-SUBMERGED")
+    
+    print(f"Loaded map: {game_map}")
+    print(f"Available missions: {[m.name for m in game_map.get_available_missions()]}")
+    
+    # Start a mission
+    available_missions = game_map.get_available_missions()
+    if available_missions:
+        mission = available_missions[0]
+        game_map.start_mission(mission.mission_id)
+        print(f"Started mission: {mission.name}")
+        
+        # Simulate robot movement
+        robot_state = {
+            'position': {'x': 1800, 'y': 900, 'angle': 0},
+            'sensors': {'color': game_map.get_color_at_position(1800, 900)},
+            'speed': 100.0,
+            'energy_used': 10.0,
+            'distance_traveled': 200.0
+        }
+        
+        # Update mission progress
+        game_map.update_mission_progress(robot_state)
+        
+        # Check progress
+        progress = game_map.get_mission_progress()
+        print(f"Mission progress: {progress['active_mission']}")
+        
+    # Export map configuration
+    game_map.export_map_config("submerged_2024_map.json")
+    print("Map configuration exported!")
