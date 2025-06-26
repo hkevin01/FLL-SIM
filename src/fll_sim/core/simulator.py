@@ -51,7 +51,7 @@ class Simulator:
     - Real-time visualization
     """
     
-    def __init__(self, robot: Robot, game_map: GameMap, config: Optional[SimulationConfig] = None):
+    def __init__(self, robot: Robot, game_map: GameMap, config: Optional[SimulationConfig] = None, competition_mode: bool = False, competition_time_limit: int = 150):
         """
         Initialize the simulator.
         
@@ -59,6 +59,8 @@ class Simulator:
             robot: The robot to simulate
             game_map: The game map/environment
             config: Simulation configuration settings
+            competition_mode: Whether to enable competition mode
+            competition_time_limit: Time limit for competition mode in seconds
         """
         self.robot = robot
         self.game_map = game_map
@@ -87,6 +89,11 @@ class Simulator:
         self.on_mission_complete: List[Callable] = []
         self.on_collision: List[Callable] = []
         
+        # Competition mode
+        self.competition_mode = competition_mode
+        self.competition_time_limit = competition_time_limit
+        self.competition_time_left = competition_time_limit
+        
         # Setup simulation
         self._setup_physics()
         self._setup_input_handlers()
@@ -108,14 +115,13 @@ class Simulator:
             """Handle collision between robot and obstacles."""
             for callback in self.on_collision:
                 callback(arbiter, space, data)
-            return True
         
-        # Robot-obstacle collision
-        handler = self.space.add_collision_handler(
-            self.robot.collision_type, 
-            self.game_map.obstacle_collision_type
+        # Robot-obstacle collision using Pymunk 7.x API
+        self.space.on_collision(
+            collision_type_a=1,  # Robot collision type 
+            collision_type_b=2,  # Obstacle collision type
+            begin=robot_obstacle_collision
         )
-        handler.begin = robot_obstacle_collision
     
     def _setup_input_handlers(self):
         """Setup keyboard and mouse input handlers."""
@@ -181,6 +187,13 @@ class Simulator:
         # Update simulation time
         self.simulation_time += dt
         self.frame_count += 1
+        
+        # Competition timer logic
+        if self.competition_mode:
+            self.competition_time_left -= dt
+            if self.competition_time_left <= 0:
+                self.competition_time_left = 0
+                self.stop()
     
     def _simulation_loop(self):
         """Main simulation loop."""
@@ -297,3 +310,8 @@ class Simulator:
             "paused": self.paused,
             "running": self.running,
         }
+    
+    def get_competition_time_left(self):
+        if self.competition_mode:
+            return max(0, self.competition_time_left)
+        return None

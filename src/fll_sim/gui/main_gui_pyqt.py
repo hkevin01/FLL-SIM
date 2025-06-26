@@ -7,49 +7,23 @@ FLL-Sim using PyQt6, making the simulator accessible to users
 who prefer visual interfaces over command-line tools.
 """
 
-import json
-import os
-import subprocess
 import sys
-import threading
-from pathlib import Path
-from typing import Any, Dict, Optional
-
-from PyQt6.QtCore import QSettings, QSize, Qt, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QFont, QIcon, QKeySequence, QPixmap, QShortcut
+import os
 from PyQt6.QtWidgets import (
-    QApplication,
-    QButtonGroup,
-    QCheckBox,
-    QComboBox,
-    QDialogButtonBox,
-    QFileDialog,
-    QFormLayout,
-    QFrame,
-    QGridLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QMainWindow,
-    QMenuBar,
-    QMessageBox,
-    QProgressBar,
-    QPushButton,
-    QScrollArea,
-    QSizePolicy,
-    QSpinBox,
-    QSplitter,
-    QStatusBar,
-    QTabWidget,
-    QTextEdit,
-    QToolBar,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QTabWidget, QLabel, QPushButton, QComboBox, QTextEdit, QSpinBox,
+    QCheckBox, QGroupBox, QGridLayout, QFormLayout, QProgressBar,
+    QTreeWidget, QTreeWidgetItem, QListWidget, QSplitter, QFrame,
+    QMessageBox, QFileDialog, QStatusBar, QMenuBar, QToolBar,
+    QListWidgetItem
 )
+from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal, QSize
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QAction
+import threading
+import subprocess
+from pathlib import Path
+from typing import Optional, Dict, Any
+import json
 
 # Add project src to path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -75,23 +49,12 @@ class SimulationThread(QThread):
         """Run the simulation command."""
         try:
             self.status_update.emit("Starting simulation...")
-            
-            # Set up environment for proper Python path
-            env = os.environ.copy()
-            src_path = str(project_root / "src")
-            if "PYTHONPATH" in env:
-                env["PYTHONPATH"] = f"{src_path}:{env['PYTHONPATH']}"
-            else:
-                env["PYTHONPATH"] = src_path
-            
-            # Run the simulation with proper environment
             self.process = subprocess.Popen(
                 self.command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                cwd=str(project_root),
-                env=env
+                cwd=str(project_root)
             )
             
             # Monitor process
@@ -101,8 +64,7 @@ class SimulationThread(QThread):
             if self.process.returncode == 0:
                 self.status_update.emit("Simulation completed successfully")
             else:
-                stderr_output = self.process.stderr.read()
-                self.status_update.emit(f"Simulation error: {stderr_output}")
+                self.status_update.emit("Simulation ended with errors")
                 
         except Exception as e:
             self.status_update.emit(f"Error running simulation: {e}")
@@ -147,22 +109,19 @@ class FLLSimGUI(QMainWindow):
         self._load_initial_data()
     
     def _setup_ui(self):
-        """Set up the user interface with Windows 11 design standards."""
+        """Set up the user interface."""
         self.setWindowTitle("FLL-Sim - First Lego League Simulator")
-        self.setGeometry(100, 100, 1400, 900)  # Larger default size for Windows
-        self.setMinimumSize(1200, 800)  # Larger minimum size
-        
-        # Set window icon
-        self.setWindowIcon(QIcon())  # Will use system default for now
+        self.setGeometry(100, 100, 1200, 800)
+        self.setMinimumSize(1000, 700)
         
         # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
-        # Create menu bar with Windows shortcuts
+        # Create menu bar
         self._create_menu_bar()
         
-        # Create toolbar with Windows-style icons
+        # Create toolbar
         self._create_toolbar()
         
         # Create status bar
@@ -170,16 +129,11 @@ class FLLSimGUI(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
         
-        # Create main layout with Windows-standard margins
+        # Create main layout
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(8, 8, 8, 8)  # Windows 8px grid
-        main_layout.setSpacing(8)
         
-        # Create tab widget with Windows styling
+        # Create tab widget
         self.tab_widget = QTabWidget()
-        self.tab_widget.setTabPosition(QTabWidget.TabPosition.North)
-        self.tab_widget.setMovable(False)  # Windows standard
-        self.tab_widget.setDocumentMode(True)  # Modern flat look
         main_layout.addWidget(self.tab_widget)
         
         # Create tabs
@@ -189,322 +143,77 @@ class FLLSimGUI(QMainWindow):
         self._create_missions_tab()
         self._create_robot_tab()
         self._create_monitor_tab()
-        
-        # Set up keyboard shortcuts
-        self._setup_shortcuts()
     
     def _setup_styles(self):
-        """Set up Windows 11-style application styles."""
-        # Windows 11 modern styling with Fluent Design principles
+        """Set up application styles."""
+        # Set application style
         self.setStyleSheet("""
-            /* Main Window - Light theme following Windows 11 */
             QMainWindow {
-                background-color: #F3F3F3;
-                color: #323130;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 9pt;
+                background-color: #f5f5f5;
             }
-            
-            /* Tab Widget - Clean modern tabs without shadows */
             QTabWidget::pane {
-                border: none;
-                background-color: #FFFFFF;
-                border-radius: 8px;
-                margin-top: 0px;
+                border: 1px solid #c0c0c0;
+                background-color: white;
             }
-            
-            QTabWidget::tab-bar {
-                alignment: left;
-            }
-            
-            QTabBar {
-                background-color: transparent;
-                border: none;
-            }
-            
             QTabBar::tab {
-                background-color: transparent;
-                color: #605E5C;
-                padding: 12px 24px;
-                margin-right: 4px;
-                border: none;
-                border-radius: 6px 6px 0px 0px;
-                min-width: 80px;
-                font-weight: 400;
+                background-color: #e0e0e0;
+                padding: 8px 16px;
+                margin-right: 2px;
             }
-            
             QTabBar::tab:selected {
-                background-color: #FFFFFF;
-                color: #323130;
-                border: none;
-                border-bottom: 3px solid #0078D4;
-                font-weight: 600;
+                background-color: white;
+                border-bottom: 2px solid #2E86AB;
             }
-            
-            QTabBar::tab:hover:!selected {
-                background-color: #F3F3F3;
-                color: #323130;
-            }
-            
-            /* Group Boxes - Windows 11 card style */
             QGroupBox {
-                font-weight: 600;
-                color: #323130;
-                border: 1px solid #E1DFDD;
-                border-radius: 8px;
-                margin-top: 12px;
-                padding-top: 16px;
-                background-color: #FFFFFF;
+                font-weight: bold;
+                border: 2px solid #cccccc;
+                border-radius: 5px;
+                margin-top: 1ex;
+                padding-top: 10px;
             }
-            
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 16px;
-                padding: 0 8px 0 8px;
-                color: #323130;
-                background-color: #FFFFFF;
+                left: 10px;
+                padding: 0 5px 0 5px;
             }
-            
-            /* Buttons - Windows 11 Fluent style */
             QPushButton {
-                background-color: #0078D4;
-                color: #FFFFFF;
-                border: 1px solid #0078D4;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: 400;
-                min-height: 20px;
-                min-width: 64px;
-            }
-            
-            QPushButton:hover {
-                background-color: #106EBE;
-                border-color: #106EBE;
-            }
-            
-            QPushButton:pressed {
-                background-color: #005A9E;
-                border-color: #005A9E;
-            }
-            
-            QPushButton:disabled {
-                background-color: #F3F2F1;
-                color: #A19F9D;
-                border-color: #E1DFDD;
-            }
-            
-            /* Secondary/Outline buttons */
-            QPushButton[class="secondary"] {
-                background-color: transparent;
-                color: #0078D4;
-                border: 1px solid #0078D4;
-            }
-            
-            QPushButton[class="secondary"]:hover {
-                background-color: #F3F2F1;
-            }
-            
-            /* Input fields */
-            QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox, QComboBox {
-                border: 1px solid #605E5C;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: #FFFFFF;
-                color: #323130;
-                selection-background-color: #0078D4;
-            }
-            
-            QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, 
-            QDoubleSpinBox:focus, QComboBox:focus {
-                border: 2px solid #0078D4;
-                outline: none;
-            }
-            
-            /* Lists */
-            QListWidget, QTreeWidget {
-                border: 1px solid #E1DFDD;
-                border-radius: 4px;
-                background-color: #FFFFFF;
-                alternate-background-color: #F9F9F9;
-                selection-background-color: #0078D4;
-                selection-color: #FFFFFF;
-                outline: none;
-            }
-            
-            QListWidget::item, QTreeWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #F3F2F1;
-            }
-            
-            QListWidget::item:selected, QTreeWidget::item:selected {
-                background-color: #0078D4;
-                color: #FFFFFF;
-            }
-            
-            QListWidget::item:hover, QTreeWidget::item:hover {
-                background-color: #F3F2F1;
-            }
-            
-            /* Progress bars */
-            QProgressBar {
-                border: 1px solid #E1DFDD;
-                border-radius: 4px;
-                text-align: center;
-                background-color: #F3F2F1;
-            }
-            
-            QProgressBar::chunk {
-                background-color: #0078D4;
-                border-radius: 3px;
-            }
-            
-            /* Status bar */
-            QStatusBar {
-                background-color: #F3F3F3;
-                border-top: 1px solid #E1DFDD;
-                color: #605E5C;
-            }
-            
-            /* Toolbar */
-            QToolBar {
-                background-color: #F3F3F3;
+                background-color: #2E86AB;
+                color: white;
                 border: none;
-                spacing: 8px;
-                padding: 8px;
-            }
-            
-            /* Menu bar */
-            QMenuBar {
-                background-color: #F3F3F3;
-                color: #323130;
-                border-bottom: 1px solid #E1DFDD;
-            }
-            
-            QMenuBar::item {
-                padding: 8px 12px;
-                background-color: transparent;
-            }
-            
-            QMenuBar::item:selected {
-                background-color: #F9F9F9;
-                color: #0078D4;
-            }
-            
-            /* Menus */
-            QMenu {
-                background-color: #FFFFFF;
-                border: 1px solid #E1DFDD;
-                border-radius: 8px;
-                padding: 4px;
-            }
-            
-            QMenu::item {
                 padding: 8px 16px;
                 border-radius: 4px;
+                font-weight: bold;
             }
-            
-            QMenu::item:selected {
-                background-color: #F3F2F1;
-                color: #0078D4;
+            QPushButton:hover {
+                background-color: #1E5F7A;
             }
-            
-            QMenu::separator {
-                height: 1px;
-                background-color: #E1DFDD;
-                margin: 4px 8px;
-            }
-            
-            /* Checkboxes and Radio buttons */
-            QCheckBox, QRadioButton {
-                color: #323130;
-                spacing: 8px;
-            }
-            
-            QCheckBox::indicator, QRadioButton::indicator {
-                width: 16px;
-                height: 16px;
-            }
-            
-            QCheckBox::indicator:unchecked {
-                border: 1px solid #605E5C;
-                background-color: #FFFFFF;
-                border-radius: 2px;
-            }
-            
-            QCheckBox::indicator:checked {
-                border: 1px solid #0078D4;
-                background-color: #0078D4;
-                border-radius: 2px;
-            }
-            
-            /* Scrollbars */
-            QScrollBar:vertical {
-                background-color: #F3F2F1;
-                width: 12px;
-                border-radius: 6px;
-            }
-            
-            QScrollBar::handle:vertical {
-                background-color: #C8C6C4;
-                border-radius: 6px;
-                min-height: 20px;
-            }
-            
-            QScrollBar::handle:vertical:hover {
-                background-color: #A19F9D;
-            }
-            
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
+            QPushButton:pressed {
+                background-color: #0E3F5A;
             }
         """)
     
-    def _setup_shortcuts(self):
-        """Set up Windows-standard keyboard shortcuts."""
-        # File operations
-        QShortcut(QKeySequence.StandardKey.New, self, self._new_simulation)
-        QShortcut(QKeySequence.StandardKey.Open, self, self._load_configuration)
-        QShortcut(QKeySequence.StandardKey.Save, self, self._save_configuration)
-        QShortcut(QKeySequence.StandardKey.Quit, self, self.close)
-        
-        # Simulation operations
-        QShortcut(QKeySequence("F5"), self, self._start_simulation)
-        QShortcut(QKeySequence("Shift+F5"), self, self._stop_simulation)
-        QShortcut(QKeySequence("Ctrl+F5"), self, self._run_demo)
-        
-        # Help
-        QShortcut(QKeySequence.StandardKey.HelpContents, self, self._open_documentation)
-    
     def _create_menu_bar(self):
-        """Create the menu bar with Windows-standard shortcuts."""
+        """Create the menu bar."""
         menubar = self.menuBar()
         
         # File menu
         file_menu = menubar.addMenu('&File')
         
         new_action = QAction('&New Simulation', self)
-        new_action.setShortcut(QKeySequence.StandardKey.New)
-        new_action.setStatusTip('Create a new simulation')
         new_action.triggered.connect(self._new_simulation)
         file_menu.addAction(new_action)
         
-        load_action = QAction('&Open Configuration...', self)
-        load_action.setShortcut(QKeySequence.StandardKey.Open)
-        load_action.setStatusTip('Load a saved configuration')
+        load_action = QAction('&Load Configuration', self)
         load_action.triggered.connect(self._load_configuration)
         file_menu.addAction(load_action)
         
-        save_action = QAction('&Save Configuration...', self)
-        save_action.setShortcut(QKeySequence.StandardKey.Save)
-        save_action.setStatusTip('Save current configuration')
+        save_action = QAction('&Save Configuration', self)
         save_action.triggered.connect(self._save_configuration)
         file_menu.addAction(save_action)
         
         file_menu.addSeparator()
         
         exit_action = QAction('E&xit', self)
-        exit_action.setShortcut(QKeySequence.StandardKey.Quit)
-        exit_action.setStatusTip('Exit FLL-Sim')
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
         
@@ -512,48 +221,35 @@ class FLLSimGUI(QMainWindow):
         sim_menu = menubar.addMenu('&Simulation')
         
         start_action = QAction('&Start Simulation', self)
-        start_action.setShortcut(QKeySequence('F5'))
-        start_action.setStatusTip('Start the simulation (F5)')
         start_action.triggered.connect(self._start_simulation)
         sim_menu.addAction(start_action)
         
         stop_action = QAction('St&op Simulation', self)
-        stop_action.setShortcut(QKeySequence('Shift+F5'))
-        stop_action.setStatusTip('Stop the simulation (Shift+F5)')
         stop_action.triggered.connect(self._stop_simulation)
         sim_menu.addAction(stop_action)
         
         sim_menu.addSeparator()
         
         demo_action = QAction('Run &Demo', self)
-        demo_action.setShortcut(QKeySequence('Ctrl+F5'))
-        demo_action.setStatusTip('Run a quick demo (Ctrl+F5)')
         demo_action.triggered.connect(self._run_demo)
         sim_menu.addAction(demo_action)
         
         headless_action = QAction('Run &Headless', self)
-        headless_action.setStatusTip('Run simulation without GUI')
         headless_action.triggered.connect(self._run_headless)
         sim_menu.addAction(headless_action)
         
         # Tools menu
         tools_menu = menubar.addMenu('&Tools')
         
-        mission_editor_action = QAction('&Mission Editor...', self)
-        mission_editor_action.setShortcut(QKeySequence('Ctrl+M'))
-        mission_editor_action.setStatusTip('Open the mission editor')
+        mission_editor_action = QAction('&Mission Editor', self)
         mission_editor_action.triggered.connect(self._open_mission_editor)
         tools_menu.addAction(mission_editor_action)
         
-        robot_designer_action = QAction('&Robot Designer...', self)
-        robot_designer_action.setShortcut(QKeySequence('Ctrl+R'))
-        robot_designer_action.setStatusTip('Open the robot designer')
+        robot_designer_action = QAction('&Robot Designer', self)
         robot_designer_action.triggered.connect(self._open_robot_designer)
         tools_menu.addAction(robot_designer_action)
         
         monitor_action = QAction('&Performance Monitor', self)
-        monitor_action.setShortcut(QKeySequence('Ctrl+P'))
-        monitor_action.setStatusTip('Open performance monitor')
         monitor_action.triggered.connect(self._open_performance_monitor)
         tools_menu.addAction(monitor_action)
         
@@ -561,20 +257,14 @@ class FLLSimGUI(QMainWindow):
         help_menu = menubar.addMenu('&Help')
         
         docs_action = QAction('&Documentation', self)
-        docs_action.setShortcut(QKeySequence.StandardKey.HelpContents)
-        docs_action.setStatusTip('Open documentation (F1)')
         docs_action.triggered.connect(self._open_documentation)
         help_menu.addAction(docs_action)
         
         examples_action = QAction('&Examples', self)
-        examples_action.setStatusTip('View example projects')
         examples_action.triggered.connect(self._open_examples)
         help_menu.addAction(examples_action)
         
-        help_menu.addSeparator()
-        
-        about_action = QAction('&About FLL-Sim', self)
-        about_action.setStatusTip('About this application')
+        about_action = QAction('&About', self)
         about_action.triggered.connect(self._show_about)
         help_menu.addAction(about_action)
     
@@ -746,40 +436,33 @@ class FLLSimGUI(QMainWindow):
         self.tab_widget.addTab(widget, "Configuration")
     
     def _create_simulation_tab(self):
-        """Create the simulation tab with enhanced visualization info."""
+        """Create the simulation tab."""
         widget = QWidget()
-        layout = QHBoxLayout(widget)
-        
-        # Left side - Controls
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-        left_panel.setMaximumWidth(350)
+        layout = QVBoxLayout(widget)
         
         # Simulation control
         control_group = QGroupBox("Simulation Control")
-        control_layout = QVBoxLayout(control_group)
+        control_layout = QHBoxLayout(control_group)
         
-        start_btn = QPushButton("🚀 Start Simulation")
+        start_btn = QPushButton("Start Simulation")
         start_btn.clicked.connect(self._start_simulation)
         control_layout.addWidget(start_btn)
         
-        stop_btn = QPushButton("⏹️ Stop Simulation")
+        stop_btn = QPushButton("Stop Simulation")
         stop_btn.clicked.connect(self._stop_simulation)
         control_layout.addWidget(stop_btn)
         
-        pause_btn = QPushButton("⏸️ Pause/Resume")
+        pause_btn = QPushButton("Pause/Resume")
         pause_btn.clicked.connect(self._pause_simulation)
         control_layout.addWidget(pause_btn)
         
-        reset_btn = QPushButton("🔄 Reset")
+        reset_btn = QPushButton("Reset")
         reset_btn.clicked.connect(self._reset_simulation)
         control_layout.addWidget(reset_btn)
         
-        # Add debug options
-        self.debug_checkbox = QCheckBox("Debug Visualization")
-        control_layout.addWidget(self.debug_checkbox)
+        control_layout.addStretch()
         
-        left_layout.addWidget(control_group)
+        layout.addWidget(control_group)
         
         # Simulation status
         status_group = QGroupBox("Simulation Status")
@@ -794,7 +477,7 @@ class FLLSimGUI(QMainWindow):
         self.fps_label = QLabel("0")
         status_layout.addRow("FPS:", self.fps_label)
         
-        left_layout.addWidget(status_group)
+        layout.addWidget(status_group)
         
         # Mission progress
         mission_group = QGroupBox("Mission Progress")
@@ -806,57 +489,7 @@ class FLLSimGUI(QMainWindow):
         self.score_label = QLabel("Score: 0")
         mission_layout.addWidget(self.score_label)
         
-        left_layout.addWidget(mission_group)
-        left_layout.addStretch()
-        
-        layout.addWidget(left_panel)
-        
-        # Right side - Visualization info
-        viz_group = QGroupBox("3D Simulation Visualization")
-        viz_layout = QVBoxLayout(viz_group)
-        
-        # Instructions for the visualization
-        instructions = QLabel(
-            "<h3>🎮 3D Simulation Window</h3>"
-            "<p>When you start the simulation, a separate 3D visualization window "
-            "will open showing:</p>"
-            "<ul>"
-            "<li><b>Interactive 3D Robot</b> - Watch your robot move in real-time</li>"
-            "<li><b>FLL Game Field</b> - Complete with missions and obstacles</li>"
-            "<li><b>Physics Simulation</b> - Realistic robot movement and collisions</li>"
-            "<li><b>Sensor Visualization</b> - See what your robot 'sees'</li>"
-            "</ul>"
-            "<br>"
-            "<h4>🎯 Controls in Simulation Window:</h4>"
-            "<table style='margin-left: 20px;'>"
-            "<tr><td><b>Arrow Keys</b></td><td>Manual robot control</td></tr>"
-            "<tr><td><b>SPACE</b></td><td>Pause/Resume simulation</td></tr>"
-            "<tr><td><b>R</b></td><td>Reset robot position</td></tr>"
-            "<tr><td><b>D</b></td><td>Toggle debug visualization</td></tr>"
-            "<tr><td><b>Q</b></td><td>Quit simulation</td></tr>"
-            "<tr><td><b>1-4</b></td><td>Run demo programs</td></tr>"
-            "</table>"
-            "<br>"
-            "<p><i>Note: If the window doesn't appear, check your taskbar or "
-            "use Alt+Tab to find it.</i></p>"
-        )
-        instructions.setWordWrap(True)
-        instructions.setStyleSheet("""
-            QLabel {
-                background-color: #F8F9FA;
-                border: 2px solid #0078D4;
-                border-radius: 12px;
-                padding: 20px;
-                color: #323130;
-                font-size: 10pt;
-                line-height: 1.4;
-            }
-        """)
-        viz_layout.addWidget(instructions)
-        
-        layout.addWidget(viz_group)
-        
-        self.tab_widget.addTab(widget, "Simulation")
+        layout.addWidget(mission_group)
         layout.addStretch()
         
         self.tab_widget.addTab(widget, "Simulation")
@@ -1125,44 +758,23 @@ class FLLSimGUI(QMainWindow):
         self.time_limit_label.setText("2:30")
     
     def _start_simulation(self):
-        """Start the simulation with proper visualization."""
+        """Start the simulation."""
         if self.simulation_thread and self.simulation_thread.isRunning():
             QMessageBox.warning(self, "Warning", "Simulation is already running!")
             return
         
         try:
-            # Use the simple simulation for now to test visualization
-            command = [sys.executable, "simple_sim.py"]
-            
-            # Add debug flag if checked
+            command = [sys.executable, "main.py"]
             if self.debug_checkbox.isChecked():
                 command.append("--debug")
             
-            # Create simulation thread
             self.simulation_thread = SimulationThread(command)
             self.simulation_thread.status_update.connect(self._update_status)
             self.simulation_thread.finished.connect(self._on_simulation_finished)
             self.simulation_thread.start()
             
-            # Update UI status
             self.sim_status_label.setText("Running")
             self.progress_bar.setVisible(True)
-            
-            # Show information message about the simulation window
-            QMessageBox.information(
-                self, 
-                "Simulation Started", 
-                "The 3D simulation visualization should open in a separate window.\n\n"
-                "If you don't see it:\n"
-                "• Check your taskbar\n"
-                "• Try Alt+Tab to switch windows\n"
-                "• Make sure pygame is installed\n\n"
-                "Controls in simulation window:\n"
-                "• Arrow Keys: Manual robot control\n"
-                "• SPACE: Pause/Resume\n"
-                "• R: Reset\n"
-                "• Q: Quit simulation"
-            )
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to start simulation: {e}")

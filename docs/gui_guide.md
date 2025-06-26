@@ -2,7 +2,7 @@
 
 ## Overview
 
-The FLL-Sim GUI provides a comprehensive graphical interface for the First Lego League Simulator. It makes robot programming and simulation accessible through an intuitive point-and-click interface.
+The FLL-Sim GUI provides a comprehensive graphical interface for the First Lego League Simulator. Built with PyQt6, it offers a modern, cross-platform interface that makes robot programming and simulation accessible through an intuitive point-and-click interface.
 
 ## Getting Started
 

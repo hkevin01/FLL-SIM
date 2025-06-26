@@ -1,0 +1,31 @@
+'2024':
+  name: "SUBMERGED\u2120"
+  description: 2024-2025 FLL Challenge season
+  theme: Ocean exploration and conservation
+  table_size:
+  - 2400
+  - 1800
+  mission_count: 15
+  max_score: 400
+  time_limit: 150
+  missions:
+  - coral_nursery
+  - shark_delivery
+  - research_vessel
+  - whale_migration
+  - submarine_voyage
+  - scuba_diver
+  - treasure_hunt
+  - ocean_cleanup
+  - sonar_discovery
+  - deep_sea_exploration
+'2023':
+  name: "MASTERPIECE\u2120"
+  description: 2023-2024 FLL Challenge season
+  theme: Arts and creativity
+  table_size:
+  - 2400
+  - 1800
+  mission_count: 14
+  max_score: 380
+  time_limit: 150

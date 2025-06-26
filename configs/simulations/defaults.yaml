@@ -1,0 +1,42 @@
+standard:
+  name: Standard Simulation
+  description: Standard simulation settings for FLL practice
+  physics_fps: 60
+  physics_dt: 0.016667
+  gravity:
+  - 0
+  - 0
+  window_width: 1200
+  window_height: 800
+  fps: 60
+  real_time_factor: 1.0
+  show_debug_info: false
+  show_physics_debug: false
+competition:
+  name: Competition Mode
+  description: Simulation settings matching competition conditions
+  physics_fps: 60
+  physics_dt: 0.016667
+  gravity:
+  - 0
+  - 0
+  window_width: 1400
+  window_height: 900
+  fps: 60
+  real_time_factor: 1.0
+  show_debug_info: false
+  show_physics_debug: false
+debug:
+  name: Debug Mode
+  description: Simulation with debug visualization enabled
+  physics_fps: 60
+  physics_dt: 0.016667
+  gravity:
+  - 0
+  - 0
+  window_width: 1600
+  window_height: 1000
+  fps: 60
+  real_time_factor: 0.5
+  show_debug_info: true
+  show_physics_debug: true

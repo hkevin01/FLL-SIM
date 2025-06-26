@@ -1,35 +1,28 @@
 """
-Robot Designer GUI Component using PyQt6 with Windows 11 Design Standards
+Robot Designer GUI Component using PyQt6
 
-Visual editor for robot configuration and customization following
-Windows user interface guidelines.
+Visual editor for robot configuration and customization.
 """
 
 from typing import Any, Dict, Optional
 
-from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
-    QDialogButtonBox,
     QDoubleSpinBox,
     QFormLayout,
-    QFrame,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
     QPushButton,
-    QScrollArea,
-    QSizePolicy,
     QSpinBox,
     QTabWidget,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
-    QWidget,
 )
 
 from fll_sim.robot.robot import RobotConfig
@@ -37,8 +30,7 @@ from fll_sim.robot.robot import RobotConfig
 
 class RobotDesignerDialog(QDialog):
     """
-    Robot designer dialog for configuring robot parameters using PyQt6
-    with Windows 11 design standards.
+    Robot designer dialog for configuring robot parameters using PyQt6.
     """
     
     def __init__(self, parent, robot_config: Optional[RobotConfig] = None):
@@ -47,210 +39,49 @@ class RobotDesignerDialog(QDialog):
         self.robot_config = robot_config
         self.result = None
         
-        self.setWindowTitle("Robot Designer - FLL-Sim")
-        self.setMinimumSize(800, 600)
-        self.resize(900, 700)  # Windows-standard dialog size
+        self.setWindowTitle("Robot Designer")
+        self.setGeometry(200, 200, 700, 500)
         self.setModal(True)
         
-        # Apply Windows 11 styling
-        self._apply_windows_styling()
         self._create_interface()
         self._load_robot_data()
-        
-        # Center dialog on parent
-        if parent:
-            self.move(parent.x() + (parent.width() - self.width()) // 2,
-                     parent.y() + (parent.height() - self.height()) // 2)
-    
-    def _apply_windows_styling(self):
-        """Apply Windows 11 styling to the dialog."""
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #F3F3F3;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 9pt;
-            }
-            
-            QTabWidget::pane {
-                border: 1px solid #E1DFDD;
-                background-color: #FFFFFF;
-                border-radius: 8px;
-                margin-top: 8px;
-            }
-            
-            QTabBar::tab {
-                background-color: #F3F3F3;
-                color: #323130;
-                padding: 12px 20px;
-                margin-right: 2px;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-                min-width: 80px;
-                font-weight: 400;
-            }
-            
-            QTabBar::tab:selected {
-                background-color: #FFFFFF;
-                color: #323130;
-                border-bottom: 3px solid #0078D4;
-                font-weight: 600;
-            }
-            
-            QTabBar::tab:hover:!selected {
-                background-color: #F9F9F9;
-                color: #0078D4;
-            }
-            
-            QGroupBox {
-                font-weight: 600;
-                color: #323130;
-                border: 1px solid #E1DFDD;
-                border-radius: 8px;
-                margin-top: 12px;
-                padding-top: 16px;
-                background-color: #FFFFFF;
-            }
-            
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 16px;
-                padding: 0 8px 0 8px;
-                color: #323130;
-                background-color: #FFFFFF;
-            }
-            
-            QSpinBox, QDoubleSpinBox, QComboBox {
-                border: 1px solid #605E5C;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: #FFFFFF;
-                color: #323130;
-                font-size: 9pt;
-                min-width: 80px;
-            }
-            
-            QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {
-                border: 2px solid #0078D4;
-                outline: none;
-            }
-            
-            QPushButton {
-                background-color: #0078D4;
-                color: #FFFFFF;
-                border: 1px solid #0078D4;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: 400;
-                min-height: 20px;
-                min-width: 75px;
-            }
-            
-            QPushButton:hover {
-                background-color: #106EBE;
-            }
-            
-            QPushButton:pressed {
-                background-color: #005A9E;
-            }
-            
-            QPushButton[class="secondary"] {
-                background-color: transparent;
-                color: #0078D4;
-                border: 1px solid #0078D4;
-            }
-            
-            QPushButton[class="secondary"]:hover {
-                background-color: #F3F2F1;
-            }
-            
-            QTreeWidget {
-                border: 1px solid #E1DFDD;
-                border-radius: 4px;
-                background-color: #FFFFFF;
-                selection-background-color: #0078D4;
-                selection-color: #FFFFFF;
-                outline: none;
-            }
-            
-            QTreeWidget::item {
-                padding: 4px;
-                border-bottom: 1px solid #F3F2F1;
-            }
-            
-            QTreeWidget::item:selected {
-                background-color: #0078D4;
-                color: #FFFFFF;
-            }
-            
-            QTreeWidget::item:hover {
-                background-color: #F3F2F1;
-            }
-            
-            QCheckBox {
-                color: #323130;
-                spacing: 8px;
-            }
-            
-            QCheckBox::indicator {
-                width: 16px;
-                height: 16px;
-            }
-            
-            QCheckBox::indicator:unchecked {
-                border: 1px solid #605E5C;
-                background-color: #FFFFFF;
-                border-radius: 2px;
-            }
-            
-            QCheckBox::indicator:checked {
-                border: 1px solid #0078D4;
-                background-color: #0078D4;
-                border-radius: 2px;
-            }
-        """)
     
     def _create_interface(self):
-        """Create the robot designer interface with Windows standards."""
-        # Main layout with Windows-standard margins
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(16, 16, 16, 16)
-        main_layout.setSpacing(12)
+        """Create the robot designer interface."""
+        layout = QVBoxLayout(self)
         
-        # Title
-        title_label = QLabel("Robot Designer")
-        title_font = QFont("Segoe UI", 14, QFont.Weight.DemiBold)
-        title_label.setFont(title_font)
-        title_label.setStyleSheet("color: #323130; margin-bottom: 8px;")
-        main_layout.addWidget(title_label)
+        # Create tab widget
+        tab_widget = QTabWidget()
+        layout.addWidget(tab_widget)
         
-        # Create tab widget with Windows styling
-        self.tab_widget = QTabWidget()
-        self.tab_widget.setTabPosition(QTabWidget.TabPosition.North)
-        self.tab_widget.setMovable(False)
-        self.tab_widget.setDocumentMode(True)
-        main_layout.addWidget(self.tab_widget)
+        # Physical properties tab
+        self._create_physical_tab(tab_widget)
         
-        # Create tabs
-        self._create_physical_tab(self.tab_widget)
-        self._create_motor_tab(self.tab_widget)
-        self._create_sensor_tab(self.tab_widget)
+        # Motor configuration tab
+        self._create_motor_tab(tab_widget)
         
-        # Dialog buttons with Windows standard layout
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | 
-            QDialogButtonBox.StandardButton.Cancel |
-            QDialogButtonBox.StandardButton.Reset
-        )
-        button_box.accepted.connect(self._save_robot)
-        button_box.rejected.connect(self.reject)
-        button_box.button(QDialogButtonBox.StandardButton.Reset).clicked.connect(self._reset_defaults)
+        # Sensor configuration tab
+        self._create_sensor_tab(tab_widget)
         
-        # Customize button text for clarity
-        button_box.button(QDialogButtonBox.StandardButton.Ok).setText("Save Robot")
-        button_box.button(QDialogButtonBox.StandardButton.Cancel).setText("Cancel")
-        button_box.button(QDialogButtonBox.StandardButton.Reset).setText("Reset to Defaults")
+        # Dialog buttons
+        button_layout = QHBoxLayout()
         
-        main_layout.addWidget(button_box)
+        reset_btn = QPushButton("Reset to Defaults")
+        reset_btn.clicked.connect(self._reset_defaults)
+        button_layout.addWidget(reset_btn)
+        
+        button_layout.addStretch()
+        
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+        
+        save_btn = QPushButton("Save Robot")
+        save_btn.clicked.connect(self._save_robot)
+        save_btn.setDefault(True)
+        button_layout.addWidget(save_btn)
+        
+        layout.addLayout(button_layout)
     
     def _create_physical_tab(self, tab_widget):
         """Create physical properties configuration tab."""

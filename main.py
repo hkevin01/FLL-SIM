@@ -21,7 +21,7 @@ import pygame
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fll_sim.core.simulator import SimulationConfig, Simulator
-from fll_sim.environment.game_map import FLLGameMap, GameMap
+from fll_sim.environment.game_map import GameMap, MapConfig
 from fll_sim.environment.mission import (
     FLLMissionFactory,
     MissionDifficulty,
@@ -48,10 +48,11 @@ def create_demo_robot() -> Robot:
     return Robot(x=100, y=100, angle=0, config=config)
 
 
-def create_demo_map() -> FLLGameMap:
+def create_demo_map() -> GameMap:
     """Create a demo FLL game map with missions."""
-    # Create base map
-    game_map = FLLGameMap(width=2400, height=1800)  # Standard FLL table size
+    # Create base map with custom size
+    config = MapConfig(width=2400, height=1800)
+    game_map = GameMap(config)
     
     # Load 2024 SUBMERGED season missions
     mission_factory = FLLMissionFactory()

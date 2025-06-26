@@ -1,0 +1,51 @@
+standard_fll:
+  name: Standard FLL Robot
+  description: Standard LEGO MINDSTORMS robot for FLL competitions
+  width: 180.0
+  length: 200.0
+  mass: 1.0
+  wheel_diameter: 56.0
+  wheel_base: 160.0
+  max_speed: 400.0
+  max_angular_velocity: 180.0
+  acceleration: 800.0
+  friction: 0.7
+  restitution: 0.1
+  color:
+  - 255
+  - 200
+  - 0
+compact_robot:
+  name: Compact Robot
+  description: Smaller, more maneuverable robot design
+  width: 150.0
+  length: 160.0
+  mass: 0.8
+  wheel_diameter: 43.0
+  wheel_base: 120.0
+  max_speed: 350.0
+  max_angular_velocity: 200.0
+  acceleration: 900.0
+  friction: 0.8
+  restitution: 0.1
+  color:
+  - 0
+  - 150
+  - 255
+heavy_pusher:
+  name: Heavy Pusher Robot
+  description: Larger robot designed for pushing missions
+  width: 220.0
+  length: 250.0
+  mass: 1.5
+  wheel_diameter: 62.0
+  wheel_base: 180.0
+  max_speed: 300.0
+  max_angular_velocity: 150.0
+  acceleration: 600.0
+  friction: 0.9
+  restitution: 0.05
+  color:
+  - 255
+  - 100
+  - 100

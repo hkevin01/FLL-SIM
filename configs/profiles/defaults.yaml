@@ -1,0 +1,38 @@
+beginner:
+  name: Beginner Profile
+  description: Profile for new FLL teams and students
+  robot_config: standard_fll
+  simulation_config: debug
+  pybricks_config: precise
+  fll_season: '2024'
+  features:
+    show_sensor_visualization: true
+    show_mission_hints: true
+    slow_motion_mode: true
+    guided_tutorials: true
+intermediate:
+  name: Intermediate Profile
+  description: Profile for teams with some FLL experience
+  robot_config: standard_fll
+  simulation_config: standard
+  pybricks_config: standard
+  fll_season: '2024'
+  features:
+    show_sensor_visualization: true
+    show_mission_hints: false
+    slow_motion_mode: false
+    guided_tutorials: false
+advanced:
+  name: Advanced Profile
+  description: Profile for experienced teams and competitions
+  robot_config: standard_fll
+  simulation_config: competition
+  pybricks_config: fast
+  fll_season: '2024'
+  features:
+    show_sensor_visualization: false
+    show_mission_hints: false
+    slow_motion_mode: false
+    guided_tutorials: false
+    competition_timer: true
+    scoring_penalties: true

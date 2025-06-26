@@ -1,0 +1,30 @@
+standard:
+  name: Standard Pybricks Config
+  description: Standard configuration for Pybricks-style API
+  wheel_diameter: 56.0
+  axle_track: 160.0
+  use_gyro: true
+  straight_speed: 200.0
+  straight_acceleration: 400.0
+  turn_rate: 100.0
+  turn_acceleration: 300.0
+fast:
+  name: Fast Robot Config
+  description: Higher speed configuration for experienced users
+  wheel_diameter: 56.0
+  axle_track: 160.0
+  use_gyro: true
+  straight_speed: 400.0
+  straight_acceleration: 800.0
+  turn_rate: 200.0
+  turn_acceleration: 600.0
+precise:
+  name: Precision Config
+  description: Lower speed configuration for precise movements
+  wheel_diameter: 56.0
+  axle_track: 160.0
+  use_gyro: true
+  straight_speed: 100.0
+  straight_acceleration: 200.0
+  turn_rate: 50.0
+  turn_acceleration: 150.0

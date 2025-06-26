@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pygame
 import pymunk
 import yaml
+import heapq
 
 from .mission import FLLMissionFactory, Mission, MissionManager, MissionStatus
 
@@ -247,8 +248,12 @@ class GameMap:
             time_limit=60.0
         )
         
-        self.add_mission(mission1)
-        self.add_mission(mission2)
+        # Note: Mission system needs integration with mission_manager
+        # self.add_mission(mission1)
+        # self.add_mission(mission2)
+        
+        # For now, we'll skip adding sample missions to avoid errors
+        print("Sample missions skipped - mission system needs integration")
     
     def load_fll_season_map(self, season: str = "2024-SUBMERGED") -> None:
         """
@@ -513,18 +518,71 @@ class GameMap:
     def get_optimal_path(self, start: Tuple[float, float], 
                         end: Tuple[float, float]) -> List[Tuple[float, float]]:
         """
-        Calculate optimal path between two points avoiding obstacles.
-        This is a placeholder for future AI pathfinding integration.
-        
+        Calculate optimal path between two points avoiding obstacles using A*.
         Args:
             start: Starting position (x, y)
             end: Target position (x, y)
-            
         Returns:
             List of waypoints forming optimal path
         """
-        # Simple straight-line path for now
-        # Future: Implement A* or other pathfinding algorithm
+        # Grid parameters
+        grid_size = 50.0  # mm per cell
+        width = int(self.config.width // grid_size)
+        height = int(self.config.height // grid_size)
+        
+        def to_grid(pos):
+            return (int(pos[0] // grid_size), int(pos[1] // grid_size))
+        def to_world(cell):
+            return (cell[0] * grid_size + grid_size/2, cell[1] * grid_size + grid_size/2)
+        
+        start_cell = to_grid(start)
+        end_cell = to_grid(end)
+        
+        # Build obstacle set
+        obstacle_cells = set()
+        for obs in self.obstacles:
+            if not obs.is_movable:
+                min_x = int((obs.x - obs.width/2) // grid_size)
+                max_x = int((obs.x + obs.width/2) // grid_size)
+                min_y = int((obs.y - obs.height/2) // grid_size)
+                max_y = int((obs.y + obs.height/2) // grid_size)
+                for x in range(min_x, max_x+1):
+                    for y in range(min_y, max_y+1):
+                        obstacle_cells.add((x, y))
+        
+        def neighbors(cell):
+            x, y = cell
+            for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+                nx, ny = x+dx, y+dy
+                if 0 <= nx < width and 0 <= ny < height and (nx, ny) not in obstacle_cells:
+                    yield (nx, ny)
+        
+        # A* search
+        open_set = []
+        heapq.heappush(open_set, (0, start_cell))
+        came_from = {}
+        g_score = {start_cell: 0}
+        f_score = {start_cell: abs(start_cell[0]-end_cell[0]) + abs(start_cell[1]-end_cell[1])}
+        
+        while open_set:
+            _, current = heapq.heappop(open_set)
+            if current == end_cell:
+                # Reconstruct path
+                path = [current]
+                while current in came_from:
+                    current = came_from[current]
+                    path.append(current)
+                path.reverse()
+                return [to_world(cell) for cell in path]
+            for neighbor in neighbors(current):
+                tentative_g = g_score[current] + 1
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g
+                    f = tentative_g + abs(neighbor[0]-end_cell[0]) + abs(neighbor[1]-end_cell[1])
+                    f_score[neighbor] = f
+                    heapq.heappush(open_set, (f, neighbor))
+        # No path found
         return [start, end]
 
     def export_map_config(self, filename: str) -> None:
@@ -605,6 +663,44 @@ class GameMap:
             
         # Load start positions
         self.robot_start_positions = config_data.get("robot_start_positions", [(200, 600, 0)])
+
+    def add_to_space(self, space: pymunk.Space) -> None:
+        """
+        Add map elements to the physics space.
+        
+        Args:
+            space: Pymunk physics space to add elements to
+        """
+        # Add border walls
+        border_walls = [
+            # Top wall
+            ((0, 0), (self.config.width, 0)),
+            # Bottom wall  
+            ((0, self.config.height), (self.config.width, self.config.height)),
+            # Left wall
+            ((0, 0), (0, self.config.height)),
+            # Right wall
+            ((self.config.width, 0), (self.config.width, self.config.height))
+        ]
+        
+        for start, end in border_walls:
+            body = pymunk.Body(body_type=pymunk.Body.STATIC)
+            shape = pymunk.Segment(body, start, end, self.config.border_thickness/2)
+            shape.friction = 0.7
+            shape.collision_type = self.BORDER_COLLISION_TYPE
+            space.add(body, shape)
+            self.border_bodies.append(body)
+        
+        # Add obstacles to physics space
+        for obstacle in self.obstacles:
+            body = pymunk.Body(body_type=pymunk.Body.STATIC)
+            # Create a box shape for the obstacle
+            shape = pymunk.Poly.create_box(body, (obstacle.width, obstacle.height))
+            shape.body.position = obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2
+            shape.friction = 0.7
+            shape.collision_type = self.OBSTACLE_COLLISION_TYPE
+            space.add(body, shape)
+            self.obstacle_bodies.append(body)
 
     def __repr__(self) -> str:
         return (f"GameMap(size={self.config.width}x{self.config.height}, "

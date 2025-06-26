@@ -1,34 +1,25 @@
 """
-Mission Editor GUI Component using PyQt6 with Windows 11 Design Standards
+Mission Editor GUI Component using PyQt6
 
-This module provides a visual editor for creating and modifying FLL missions
-following Windows user interface guidelines.
+This module provides a visual editor for creating and modifying FLL missions.
 """
 
 from typing import Optional
 
-from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QComboBox,
     QDialog,
-    QDialogButtonBox,
     QFormLayout,
-    QFrame,
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
-    QScrollArea,
-    QSizePolicy,
-    QSpinBox,
     QTextEdit,
     QVBoxLayout,
-    QWidget,
 )
 
 from fll_sim.environment.mission import FLLMissionFactory, Mission
@@ -36,8 +27,7 @@ from fll_sim.environment.mission import FLLMissionFactory, Mission
 
 class MissionEditorDialog(QDialog):
     """
-    Mission editor dialog for creating and editing FLL missions using PyQt6
-    with Windows 11 design standards.
+    Mission editor dialog for creating and editing FLL missions using PyQt6.
     """
     
     def __init__(self, parent, mission: Optional[Mission] = None):
@@ -46,157 +36,28 @@ class MissionEditorDialog(QDialog):
         self.mission = mission
         self.result = None
         
-        self.setWindowTitle("Mission Editor - FLL-Sim")
-        self.setMinimumSize(700, 500)
-        self.resize(800, 600)  # Windows-standard dialog size
+        self.setWindowTitle("Mission Editor")
+        self.setGeometry(200, 200, 600, 400)
         self.setModal(True)
         
-        # Apply Windows 11 styling
-        self._apply_windows_styling()
         self._create_interface()
         self._load_mission_data()
-        
-        # Center dialog on parent
-        if parent:
-            self.move(parent.x() + (parent.width() - self.width()) // 2,
-                     parent.y() + (parent.height() - self.height()) // 2)
-    
-    def _apply_windows_styling(self):
-        """Apply Windows 11 styling to the dialog."""
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #F3F3F3;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 9pt;
-            }
-            
-            QGroupBox {
-                font-weight: 600;
-                color: #323130;
-                border: 1px solid #E1DFDD;
-                border-radius: 8px;
-                margin-top: 12px;
-                padding-top: 16px;
-                background-color: #FFFFFF;
-            }
-            
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 16px;
-                padding: 0 8px 0 8px;
-                color: #323130;
-                background-color: #FFFFFF;
-            }
-            
-            QLineEdit, QTextEdit, QComboBox, QSpinBox {
-                border: 1px solid #605E5C;
-                border-radius: 4px;
-                padding: 8px;
-                background-color: #FFFFFF;
-                color: #323130;
-                font-size: 9pt;
-            }
-            
-            QLineEdit:focus, QTextEdit:focus, QComboBox:focus, QSpinBox:focus {
-                border: 2px solid #0078D4;
-                outline: none;
-            }
-            
-            QPushButton {
-                background-color: #0078D4;
-                color: #FFFFFF;
-                border: 1px solid #0078D4;
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-weight: 400;
-                min-height: 20px;
-                min-width: 75px;
-            }
-            
-            QPushButton:hover {
-                background-color: #106EBE;
-            }
-            
-            QPushButton:pressed {
-                background-color: #005A9E;
-            }
-            
-            QPushButton[class="secondary"] {
-                background-color: transparent;
-                color: #0078D4;
-                border: 1px solid #0078D4;
-            }
-            
-            QPushButton[class="secondary"]:hover {
-                background-color: #F3F2F1;
-            }
-            
-            QListWidget {
-                border: 1px solid #E1DFDD;
-                border-radius: 4px;
-                background-color: #FFFFFF;
-                selection-background-color: #0078D4;
-                selection-color: #FFFFFF;
-                outline: none;
-            }
-            
-            QListWidget::item {
-                padding: 8px;
-                border-bottom: 1px solid #F3F2F1;
-            }
-            
-            QListWidget::item:selected {
-                background-color: #0078D4;
-                color: #FFFFFF;
-            }
-            
-            QListWidget::item:hover {
-                background-color: #F3F2F1;
-            }
-        """)
     
     def _create_interface(self):
-        """Create the mission editor interface with Windows standards."""
-        # Main layout with Windows-standard margins
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(16, 16, 16, 16)
-        main_layout.setSpacing(12)
-        
-        # Title
-        title_label = QLabel("Mission Editor")
-        title_font = QFont("Segoe UI", 14, QFont.Weight.DemiBold)
-        title_label.setFont(title_font)
-        title_label.setStyleSheet("color: #323130; margin-bottom: 8px;")
-        main_layout.addWidget(title_label)
-        
-        # Scroll area for content
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        
-        # Content widget
-        content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(16)
+        """Create the mission editor interface."""
+        layout = QVBoxLayout(self)
         
         # Mission info section
-        info_group = QGroupBox("Basic Information")
+        info_group = QGroupBox("Mission Information")
         info_layout = QFormLayout(info_group)
-        info_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
-        info_layout.setVerticalSpacing(12)
-        info_layout.setHorizontalSpacing(16)
         
-        # Name field - use QLineEdit for single line
-        self.name_edit = QLineEdit()
-        self.name_edit.setPlaceholderText("Enter mission name...")
-        info_layout.addRow("Mission Name:", self.name_edit)
+        # Name
+        self.name_edit = QTextEdit()
+        self.name_edit.setMaximumHeight(30)
+        info_layout.addRow("Name:", self.name_edit)
         
-        # Description field
+        # Description
         self.description_edit = QTextEdit()
-        self.description_edit.setMaximumHeight(100)
-        self.description_edit.setPlaceholderText("Enter mission description...")
-        info_layout.addRow("Description:", self.description_edit)
         self.description_edit.setMaximumHeight(100)
         info_layout.addRow("Description:", self.description_edit)
         
