@@ -18,7 +18,7 @@ from typing import Optional
 import pygame
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from fll_sim.core.simulator import SimulationConfig, Simulator
 from fll_sim.environment.game_map import GameMap, MapConfig

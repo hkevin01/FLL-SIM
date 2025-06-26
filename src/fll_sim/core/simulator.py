@@ -6,14 +6,15 @@ simulation environment including physics, rendering, and game logic.
 """
 
 import time
-from typing import Optional, List, Callable
+from dataclasses import dataclass
+from typing import Callable, List, Optional
+
 import pygame
 import pymunk
 import pymunk.pygame_util
-from dataclasses import dataclass
 
-from ..robot.robot import Robot
 from ..environment.game_map import GameMap
+from ..robot.robot import Robot
 from ..visualization.renderer import Renderer
 
 

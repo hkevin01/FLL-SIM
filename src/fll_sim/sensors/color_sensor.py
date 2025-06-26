@@ -6,8 +6,8 @@ colors and light intensity on the game mat.
 """
 
 import math
-from typing import Tuple, Optional
 from enum import Enum
+from typing import Optional, Tuple
 
 from .sensor_base import Sensor
 
@@ -182,19 +182,19 @@ class ColorSensor(Sensor):
         renderer.draw_circle(
             world_pos[0], world_pos[1], 
             self.detection_radius, 
-            color_rgb, filled=True
+            color_rgb
         )
         
         # Draw sensor outline
         renderer.draw_circle(
             world_pos[0], world_pos[1],
             self.detection_radius + 2,
-            (255, 255, 255), filled=False, width=2
+            color=None, border_width=2, border_color=(255, 255, 255)
         )
         
         # Draw sensor name
         renderer.draw_text(
             self.name, 
             world_pos[0], world_pos[1] - self.detection_radius - 15,
-            (255, 255, 255), size=12
+            color=(255, 255, 255), font_size='small'
         )

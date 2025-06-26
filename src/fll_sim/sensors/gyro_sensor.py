@@ -218,7 +218,7 @@ class GyroSensor(Sensor):
         renderer.draw_text(
             f"{self.name}: {self.get_angle():.1f}°",
             world_pos[0], world_pos[1] - 20,
-            (255, 255, 255), size=12
+            color=(255, 255, 255), font_size='small'
         )
         
         # Draw angular velocity if significant
@@ -226,7 +226,7 @@ class GyroSensor(Sensor):
             renderer.draw_text(
                 f"ω: {self.angular_velocity:.1f}°/s",
                 world_pos[0], world_pos[1] + 20,
-                (255, 0, 255), size=10
+                color=(255, 0, 255), font_size='small'
             )
     
     def reset(self):

@@ -6,7 +6,8 @@ physical contact with objects or surfaces.
 """
 
 import math
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 import pymunk
 
 from .sensor_base import Sensor
@@ -202,20 +203,20 @@ class TouchSensor(Sensor):
         renderer.draw_circle(
             world_pos[0], world_pos[1],
             self.detection_radius,
-            fill_color, filled=True
+            fill_color
         )
         
         # Draw sensor outline
         renderer.draw_circle(
             world_pos[0], world_pos[1],
             self.detection_radius + 1,
-            color, filled=False, width=2
+            color=None, border_width=2, border_color=color
         )
         
         # Draw sensor center
         renderer.draw_circle(
             world_pos[0], world_pos[1],
-            2, color, filled=True
+            2, color
         )
         
         # Draw direction indicator if sensor has orientation
@@ -234,7 +235,7 @@ class TouchSensor(Sensor):
         renderer.draw_text(
             f"{self.name}: {state_text}",
             world_pos[0], world_pos[1] - self.detection_radius - 15,
-            (255, 255, 255), size=10
+            color=(255, 255, 255), font_size='small'
         )
         
         # Draw press count if non-zero
@@ -242,7 +243,7 @@ class TouchSensor(Sensor):
             renderer.draw_text(
                 f"Count: {self.press_count}",
                 world_pos[0], world_pos[1] + self.detection_radius + 15,
-                (255, 255, 255), size=10
+                color=(255, 255, 255), font_size='small'
             )
     
     def reset(self):

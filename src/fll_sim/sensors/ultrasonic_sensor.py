@@ -6,7 +6,8 @@ distance to objects using ultrasonic waves.
 """
 
 import math
-from typing import Tuple, Optional, List
+from typing import List, Optional, Tuple
+
 import pymunk
 
 from .sensor_base import Sensor
@@ -182,7 +183,7 @@ class UltrasonicSensor(Sensor):
         renderer.draw_text(
             f"{self.name}: {self.current_distance:.0f}mm",
             world_pos[0], world_pos[1] - 25,
-            (255, 255, 255), size=12
+            color=(255, 255, 255), font_size='small'
         )
     
     def _render_beam(self, renderer, pos: Tuple[float, float], direction: float):
@@ -215,8 +216,8 @@ class UltrasonicSensor(Sensor):
         renderer.draw_line(pos, center_end, (0, 255, 255), 2)
         
         # Draw arc at end of beam
-        renderer.draw_arc(pos, beam_length, direction - half_beam, 
-                         direction + half_beam, (0, 255, 255, 50))
+        renderer.draw_arc(pos[0], pos[1], beam_length, direction - half_beam, 
+                         direction + half_beam, (0, 255, 255), width=2)
     
     def _render_detection(self, renderer, pos: Tuple[float, float], direction: float):
         """Render the detected object position."""

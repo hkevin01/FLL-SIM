@@ -817,17 +817,17 @@ class FLLSimGUI(QMainWindow):
         
         # Instructions for the visualization
         instructions = QLabel(
-            "<h3>🎮 3D Simulation Window</h3>"
-            "<p>When you start the simulation, a separate 3D visualization window "
+            "<h3>🎮 Simulation Visualization</h3>"
+            "<p>When you start the simulation, a separate visualization window "
             "will open showing:</p>"
             "<ul>"
-            "<li><b>Interactive 3D Robot</b> - Watch your robot move in real-time</li>"
+            "<li><b>Interactive Robot</b> - Watch your robot move in real-time</li>"
             "<li><b>FLL Game Field</b> - Complete with missions and obstacles</li>"
-            "<li><b>Physics Simulation</b> - Realistic robot movement and collisions</li>"
-            "<li><b>Sensor Visualization</b> - See what your robot 'sees'</li>"
+            "<li><b>Physics Simulation</b> - Realistic movement and collisions</li>"
+            "<li><b>Sensor Visualization</b> - See what your robot detects</li>"
             "</ul>"
             "<br>"
-            "<h4>🎯 Controls in Simulation Window:</h4>"
+            "<h4>🎯 Simulation Window Controls:</h4>"
             "<table style='margin-left: 20px;'>"
             "<tr><td><b>Arrow Keys</b></td><td>Manual robot control</td></tr>"
             "<tr><td><b>SPACE</b></td><td>Pause/Resume simulation</td></tr>"
@@ -837,8 +837,13 @@ class FLLSimGUI(QMainWindow):
             "<tr><td><b>1-4</b></td><td>Run demo programs</td></tr>"
             "</table>"
             "<br>"
-            "<p><i>Note: If the window doesn't appear, check your taskbar or "
-            "use Alt+Tab to find it.</i></p>"
+            "<h4>⚠️ Troubleshooting:</h4>"
+            "<ul>"
+            "<li>If window doesn't appear: Check taskbar or use Alt+Tab</li>"
+            "<li>If running remotely: X11 forwarding may be needed</li>"
+            "<li>If using WSL: Install X server (VcXsrv, Xming)</li>"
+            "<li>If still issues: Try the headless demo below</li>"
+            "</ul>"
         )
         instructions.setWordWrap(True)
         instructions.setStyleSheet("""
@@ -1075,314 +1080,4 @@ class FLLSimGUI(QMainWindow):
         """Handle robot selection change."""
         self.current_robot = robot
         self._update_status(f"Robot changed to: {robot}")
-    
-    def _on_season_changed(self, season):
-        """Handle season selection change."""
-        self.current_season = season
-        
-        descriptions = {
-            '2024': 'SUBMERGED: Ocean exploration and environmental protection missions.',
-            '2023': 'CARGO CONNECT: Transportation and logistics challenges.'
-        }
-        
-        self.season_desc.setText(descriptions.get(season, ''))
-        self._update_status(f"Season changed to: {season}")
-    
-    def _load_missions(self):
-        """Load available missions into the list."""
-        self.missions_list.clear()
-        
-        missions = [
-            "Coral Nursery",
-            "Shark Habitat", 
-            "Ocean Cleanup",
-            "Submersible Operation",
-            "Whale Migration",
-            "Kelp Forest"
-        ]
-        
-        for mission in missions:
-            item = QListWidgetItem(mission)
-            self.missions_list.addItem(item)
-    
-    def _on_mission_selected(self, item):
-        """Handle mission selection."""
-        mission_name = item.text()
-        self.mission_name_label.setText(f"Mission: {mission_name}")
-        
-        # Sample mission descriptions
-        descriptions = {
-            "Coral Nursery": "Transport coral pieces to designated nursery areas for restoration points.",
-            "Shark Habitat": "Carefully place sharks in their natural habitat zones using precision movements.",
-            "Ocean Cleanup": "Remove plastic debris and pollutants from the ocean environment.",
-            "Submersible Operation": "Navigate the submersible through underwater obstacles.",
-            "Whale Migration": "Guide whales along their migration route safely.",
-            "Kelp Forest": "Restore kelp forest ecosystems by replanting in designated areas."
-        }
-        
-        self.mission_description.setText(descriptions.get(mission_name, "Mission description not available."))
-        self.max_score_label.setText("100")
-        self.time_limit_label.setText("2:30")
-    
-    def _start_simulation(self):
-        """Start the simulation with proper visualization."""
-        if self.simulation_thread and self.simulation_thread.isRunning():
-            QMessageBox.warning(self, "Warning", "Simulation is already running!")
-            return
-        
-        try:
-            # Use the simple simulation for now to test visualization
-            command = [sys.executable, "simple_sim.py"]
-            
-            # Add debug flag if checked
-            if self.debug_checkbox.isChecked():
-                command.append("--debug")
-            
-            # Create simulation thread
-            self.simulation_thread = SimulationThread(command)
-            self.simulation_thread.status_update.connect(self._update_status)
-            self.simulation_thread.finished.connect(self._on_simulation_finished)
-            self.simulation_thread.start()
-            
-            # Update UI status
-            self.sim_status_label.setText("Running")
-            self.progress_bar.setVisible(True)
-            
-            # Show information message about the simulation window
-            QMessageBox.information(
-                self, 
-                "Simulation Started", 
-                "The 3D simulation visualization should open in a separate window.\n\n"
-                "If you don't see it:\n"
-                "• Check your taskbar\n"
-                "• Try Alt+Tab to switch windows\n"
-                "• Make sure pygame is installed\n\n"
-                "Controls in simulation window:\n"
-                "• Arrow Keys: Manual robot control\n"
-                "• SPACE: Pause/Resume\n"
-                "• R: Reset\n"
-                "• Q: Quit simulation"
-            )
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to start simulation: {e}")
-    
-    def _stop_simulation(self):
-        """Stop the simulation."""
-        if self.simulation_thread and self.simulation_thread.isRunning():
-            self.simulation_thread.stop()
-            self.simulation_thread.wait()
-            self._on_simulation_finished()
-        else:
-            QMessageBox.information(self, "Info", "No simulation is currently running.")
-    
-    def _pause_simulation(self):
-        """Pause/resume the simulation."""
-        self._update_status("Pause/Resume functionality not yet implemented")
-    
-    def _reset_simulation(self):
-        """Reset the simulation."""
-        self._stop_simulation()
-        self._update_status("Simulation reset")
-    
-    def _run_demo(self):
-        """Run a demonstration."""
-        try:
-            command = [sys.executable, "main.py", "--demo", "basic"]
-            self.simulation_thread = SimulationThread(command)
-            self.simulation_thread.status_update.connect(self._update_status)
-            self.simulation_thread.finished.connect(self._on_simulation_finished)
-            self.simulation_thread.start()
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to run demo: {e}")
-    
-    def _run_headless(self):
-        """Run simulation in headless mode."""
-        try:
-            command = [sys.executable, "main.py", "--headless"]
-            self.simulation_thread = SimulationThread(command)
-            self.simulation_thread.status_update.connect(self._update_status)
-            self.simulation_thread.finished.connect(self._on_simulation_finished)
-            self.simulation_thread.start()
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to run headless simulation: {e}")
-    
-    def _on_simulation_finished(self):
-        """Handle simulation completion."""
-        self.sim_status_label.setText("Stopped")
-        self.progress_bar.setVisible(False)
-        self.simulation_thread = None
-    
-    def _new_simulation(self):
-        """Create a new simulation configuration."""
-        self._update_status("New simulation configuration created")
-    
-    def _load_configuration(self):
-        """Load a configuration file."""
-        filename, _ = QFileDialog.getOpenFileName(
-            self, "Load Configuration", "", "JSON files (*.json);;All files (*.*)"
-        )
-        if filename:
-            self._update_status(f"Configuration loaded: {filename}")
-    
-    def _save_configuration(self):
-        """Save current configuration."""
-        filename, _ = QFileDialog.getSaveFileName(
-            self, "Save Configuration", "", "JSON files (*.json);;All files (*.*)"
-        )
-        if filename:
-            self._update_status(f"Configuration saved: {filename}")
-    
-    def _configure_robot(self):
-        """Open robot configuration."""
-        self.tab_widget.setCurrentIndex(4)  # Switch to Robot tab
-    
-    def _load_mission(self):
-        """Load selected mission."""
-        current_item = self.missions_list.currentItem()
-        if current_item:
-            mission_name = current_item.text()
-            self._update_status(f"Mission loaded: {mission_name}")
-        else:
-            QMessageBox.warning(self, "Warning", "Please select a mission first.")
-    
-    def _open_mission_editor(self):
-        """Open mission editor."""
-        try:
-            from fll_sim.gui.mission_editor import MissionEditorDialog
-            dialog = MissionEditorDialog(self)
-            dialog.exec()
-            
-        except ImportError:
-            self._update_status("Mission editor module not available")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to open mission editor: {e}")
-    
-    def _open_robot_designer(self):
-        """Open robot designer."""
-        try:
-            from fll_sim.gui.robot_designer import RobotDesignerDialog
-            dialog = RobotDesignerDialog(self)
-            dialog.exec()
-            
-        except ImportError:
-            self._update_status("Robot designer module not available")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to open robot designer: {e}")
-    
-    def _open_performance_monitor(self):
-        """Open performance monitor."""
-        self.tab_widget.setCurrentIndex(5)  # Switch to Monitor tab
-    
-    def _open_documentation(self):
-        """Open documentation."""
-        self._update_status("Opening documentation...")
-    
-    def _open_examples(self):
-        """Open examples browser."""
-        self._update_status("Opening examples browser...")
-    
-    def _show_about(self):
-        """Show about dialog."""
-        QMessageBox.about(
-            self, "About FLL-Sim",
-            "FLL-Sim v0.1.0\n\n"
-            "First Lego League Robot and Map Simulator\n"
-            "Educational robotics simulation platform\n\n"
-            "Built with PyQt6 and Python"
-        )
-    
-    def _add_motor(self):
-        """Add a motor to the robot."""
-        # For now, just add a sample motor
-        item = QTreeWidgetItem(["A", "Large Motor", "720 deg/s"])
-        self.motor_tree.addTopLevelItem(item)
-    
-    def _remove_motor(self):
-        """Remove selected motor."""
-        current_item = self.motor_tree.currentItem()
-        if current_item:
-            self.motor_tree.takeTopLevelItem(
-                self.motor_tree.indexOfTopLevelItem(current_item)
-            )
-    
-    def _add_sensor(self):
-        """Add a sensor to the robot."""
-        # For now, just add a sample sensor
-        item = QTreeWidgetItem(["1", "Color Sensor", "(0, 10)"])
-        self.sensor_tree.addTopLevelItem(item)
-    
-    def _remove_sensor(self):
-        """Remove selected sensor."""
-        current_item = self.sensor_tree.currentItem()
-        if current_item:
-            self.sensor_tree.takeTopLevelItem(
-                self.sensor_tree.indexOfTopLevelItem(current_item)
-            )
-    
-    def _update_performance_metrics(self):
-        """Update performance monitoring data."""
-        # Simulate performance data
-        import random
-        
-        self.cpu_label.setText(f"{random.randint(10, 80)}%")
-        self.memory_label.setText(f"{random.randint(200, 800)} MB")
-        self.fps_monitor_label.setText(f"{random.randint(45, 60)}")
-        self.fps_label.setText(f"{random.randint(45, 60)}")
-        
-        # Update mission metrics
-        self.success_rate_label.setText(f"{random.randint(60, 95)}%")
-        self.avg_score_label.setText(f"{random.randint(50, 100)}")
-        self.best_time_label.setText(f"1:{random.randint(30, 59):02d}")
-    
-    def _export_performance_data(self):
-        """Export performance data."""
-        filename, _ = QFileDialog.getSaveFileName(
-            self, "Export Performance Data", "",
-            "CSV files (*.csv);;JSON files (*.json);;All files (*.*)"
-        )
-        if filename:
-            self._update_status(f"Data exported to: {filename}")
-    
-    def _update_status(self, message):
-        """Update the status bar."""
-        self.status_bar.showMessage(message)
-    
-    def closeEvent(self, event):
-        """Handle application closing."""
-        if self.simulation_thread and self.simulation_thread.isRunning():
-            reply = QMessageBox.question(
-                self, "Quit", "Simulation is running. Do you want to quit?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
-            )
-            
-            if reply == QMessageBox.StandardButton.Yes:
-                self.simulation_thread.stop()
-                self.simulation_thread.wait()
-                event.accept()
-            else:
-                event.ignore()
-        else:
-            event.accept()
-
-
-def main():
-    """Main entry point for the GUI application."""
-    app = QApplication(sys.argv)
-    app.setApplicationName("FLL-Sim")
-    app.setApplicationVersion("0.1.0")
-    
-    try:
-        window = FLLSimGUI()
-        window.show()
-        sys.exit(app.exec())
-    except Exception as e:
-        QMessageBox.critical(None, "Error", f"Failed to start FLL-Sim GUI:\n{e}")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+   

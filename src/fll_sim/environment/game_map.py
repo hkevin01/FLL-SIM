@@ -6,6 +6,7 @@ including obstacles, missions, and scoring areas. Enhanced with
 mission integration and FLL-specific features.
 """
 
+import heapq
 import json
 import math
 from dataclasses import dataclass, field
@@ -15,7 +16,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import pygame
 import pymunk
 import yaml
-import heapq
 
 from .mission import FLLMissionFactory, Mission, MissionManager, MissionStatus
 
@@ -701,6 +701,82 @@ class GameMap:
             shape.collision_type = self.OBSTACLE_COLLISION_TYPE
             space.add(body, shape)
             self.obstacle_bodies.append(body)
+
+    def update(self, dt: float) -> None:
+        """
+        Update the game map state.
+        
+        Args:
+            dt: Time delta in seconds
+        """
+        # Update mission manager if available
+        if hasattr(self, 'mission_manager') and self.mission_manager:
+            # Update mission timers and states
+            pass
+        
+        # Update any animated elements
+        # (placeholder for future animation system)
+        pass
+    
+    def reset(self) -> None:
+        """Reset the game map to initial state."""
+        # Reset mission states
+        if hasattr(self, 'mission_manager') and self.mission_manager:
+            self.mission_manager.reset_session()
+        
+        # Reset any movable objects to initial positions
+        self.mission_objects.clear()
+        
+        # Reset start positions if needed
+        pass
+    
+    def render(self, renderer) -> None:
+        """
+        Render the game map using the provided renderer.
+        
+        Args:
+            renderer: Rendering system to draw the map
+        """
+        # Render base map surface
+        if hasattr(renderer, 'draw_map'):
+            renderer.draw_map(self)
+        
+        # Render obstacles
+        for obstacle in self.obstacles:
+            if hasattr(renderer, 'draw_obstacle'):
+                renderer.draw_obstacle(obstacle)
+        
+        # Render color zones
+        for zone in self.color_zones:
+            if hasattr(renderer, 'draw_color_zone'):
+                renderer.draw_color_zone(zone)
+        
+        # Render mission areas
+        for area in self.mission_areas:
+            if hasattr(renderer, 'draw_mission_area'):
+                renderer.draw_mission_area(area)
+    
+    def get_mission_states(self) -> Dict[str, Any]:
+        """
+        Get current mission states and progress.
+        
+        Returns:
+            Dictionary containing mission state information
+        """
+        if hasattr(self, 'mission_manager') and self.mission_manager:
+            return {
+                'active_missions': len(self.mission_manager.missions),
+                'completed_missions': 0,  # Placeholder
+                'total_score': 0,  # Placeholder
+                'time_remaining': 150.0  # Standard FLL match time
+            }
+        
+        return {
+            'active_missions': 0,
+            'completed_missions': 0,
+            'total_score': 0,
+            'time_remaining': 150.0
+        }
 
     def __repr__(self) -> str:
         return (f"GameMap(size={self.config.width}x{self.config.height}, "

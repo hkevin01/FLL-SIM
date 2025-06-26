@@ -6,14 +6,15 @@ This script creates a basic simulation with a robot and game field
 to test the visualization system.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 import pygame
+
 from fll_sim.core.simulator import SimulationConfig, Simulator
 from fll_sim.environment.game_map import GameMap, MapConfig
 from fll_sim.robot.robot import Robot, RobotConfig
