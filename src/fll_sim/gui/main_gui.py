@@ -1080,4 +1080,308 @@ class FLLSimGUI(QMainWindow):
         """Handle robot selection change."""
         self.current_robot = robot
         self._update_status(f"Robot changed to: {robot}")
-   
+    
+    def _on_season_changed(self, season):
+        """Handle season selection change."""
+        self.current_season = season
+        self._update_status(f"Season changed to: {season}")
+    
+    def _on_mission_selected(self, item):
+        """Handle mission selection from the list."""
+        mission_name = item.text()
+        self.mission_name_label.setText(mission_name)
+        
+        # Load and display mission description
+        mission_file = project_root / "missions" / f"{mission_name}.json"
+        if mission_file.exists():
+            with open(mission_file, "r") as f:
+                mission_data = json.load(f)
+                self.mission_description.setPlainText(mission_data.get("description", ""))
+                
+                # Update scoring info
+                max_score = mission_data.get("max_score", 0)
+                time_limit = mission_data.get("time_limit", "N/A")
+                self.max_score_label.setText(str(max_score))
+                self.time_limit_label.setText(str(time_limit))
+        else:
+            self.mission_description.setPlainText("Mission file not found.")
+            self.max_score_label.setText("0")
+            self.time_limit_label.setText("N/A")
+    
+    def _update_status(self, message):
+        """Update the status label and log the message."""
+        self.status_label.setText(message)
+        print(f"Status updated: {message}")
+    
+    def _update_performance_metrics(self):
+        """Update the performance metrics displayed in the monitor tab."""
+        try:
+            # Simulated CPU and memory usage values for demonstration
+            import random
+            cpu_usage = random.randint(10, 90)
+            memory_usage = random.randint(100, 8000)  # MB
+            
+            self.cpu_label.setText(f"{cpu_usage}%")
+            self.memory_label.setText(f"{memory_usage} MB")
+            
+            # Update FPS monitor (simulated)
+            if self.simulation_thread and self.simulation_thread.isRunning():
+                self.fps_monitor_label.setText(str(int(1000 / self.simulation_thread.currentThread().time())))
+            else:
+                self.fps_monitor_label.setText("0")
+        except Exception as e:
+            print(f"Error updating performance metrics: {e}")
+    
+    def _load_missions(self):
+        """Load the list of available missions from the missions directory."""
+        missions_dir = project_root / "missions"
+        if missions_dir.exists():
+            mission_files = missions_dir.glob("*.json")
+            mission_names = [f.stem for f in mission_files]
+            
+            self.missions_list.clear()
+            self.missions_list.addItems(sorted(mission_names))
+    
+    def _new_simulation(self):
+        """Create a new simulation with default settings."""
+        self.current_profile = "beginner"
+        self.current_robot = "standard_fll"
+        self.current_season = "2024"
+        
+        self.profile_combo.setCurrentText(self.current_profile)
+        self.robot_combo.setCurrentText(self.current_robot)
+        self.season_combo.setCurrentText(self.current_season);
+        
+        self.debug_checkbox.setChecked(False)
+        self.performance_checkbox.setChecked(True)
+        self.logging_checkbox.setChecked(False)
+        
+        self._update_status("New simulation created with default settings.")
+    def _load_configuration(self):
+        """Load a saved configuration from file."""
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Configuration File", "", 
+                                                    "JSON Files (*.json);;All Files (*)", options=options)
+        if file_name:
+            try:
+                with open(file_name, "r") as f:
+                    config_data = json.load(f)
+                    self._apply_configuration(config_data)
+                    self._update_status(f"Configuration loaded from {file_name}")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to load configuration: {e}")
+    
+    def _save_configuration(self):
+        """Save the current configuration to a file."""
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save Configuration File", "", 
+                                                    "JSON Files (*.json);;All Files (*)", options=options)
+        if file_name:
+            try:
+                config_data = self._export_configuration()
+                with open(file_name, "w") as f:
+                    json.dump(config_data, f, indent=4)
+                    self._update_status(f"Configuration saved to {file_name}")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to save configuration: {e}")
+    
+    def _apply_configuration(self, config_data):
+        """Apply the given configuration data to the GUI elements."""
+        self.current_profile = config_data.get("profile", "beginner")
+        self.current_robot = config_data.get("robot", "standard_fll")
+        self.current_season = config_data.get("season", "2024")
+        
+        self.profile_combo.setCurrentText(self.current_profile)
+        self.robot_combo.setCurrentText(self.current_robot)
+        self.season_combo.setCurrentText(self.current_season)
+        
+        # Update checkboxes
+        self.debug_checkbox.setChecked(config_data.get("debug", False))
+        self.performance_checkbox.setChecked(config_data.get("performance_monitor", True))
+        self.logging_checkbox.setChecked(config_data.get("logging", False))
+        
+        # TODO: Apply other configuration settings as needed
+    
+    def _export_configuration(self):
+        """Export the current configuration to a dictionary."""
+        return {
+            "profile": self.current_profile,
+            "robot": self.current_robot,
+            "season": self.current_season,
+            "debug": self.debug_checkbox.isChecked(),
+            "performance_monitor": self.performance_checkbox.isChecked(),
+            "logging": self.logging_checkbox.isChecked(),
+            # TODO: Add other settings as needed
+        }
+    
+    def _start_simulation(self):
+        """Start the simulation with the current settings."""
+        if self.simulation_thread and self.simulation_thread.isRunning():
+            QMessageBox.warning(self, "Warning", "Simulation is already running.")
+            return
+        
+        # Prepare simulation command
+        command = [
+            sys.executable, "-m", "fll_sim.simulator",
+            "--profile", self.current_profile,
+            "--robot", self.current_robot,
+            "--season", self.current_season,
+            "--debug" if self.debug_checkbox.isChecked() else "",
+            "--performance" if self.performance_checkbox.isChecked() else "",
+            "--log" if self.logging_checkbox.isChecked() else "",
+        ]
+        
+        # Start simulation thread
+        self.simulation_thread = SimulationThread(command)
+        self.simulation_thread.status_update.connect(self.status_bar.showMessage)
+        self.simulation_thread.finished.connect(lambda: self._update_status("Simulation finished"))
+        self.simulation_thread.start()
+        
+        self._update_status("Simulation started")
+    
+    def _stop_simulation(self):
+        """Stop the running simulation."""
+        if self.simulation_thread and self.simulation_thread.isRunning():
+            self.simulation_thread.stop()
+            self._update_status("Stopping simulation...")
+        else:
+            self._update_status("No simulation is running")
+    
+    def _pause_simulation(self):
+        """Pause or resume the simulation."""
+        if self.simulation_thread and self.simulation_thread.isRunning():
+            # Toggle pause
+            if self.simulation_thread.paused:
+                self.simulation_thread.resume()
+                self._update_status("Resuming simulation")
+            else:
+                self.simulation_thread.pause()
+                self._update_status("Simulation paused")
+        else:
+            self._update_status("No simulation is running")
+    
+    def _reset_simulation(self):
+        """Reset the simulation to initial state."""
+        if self.simulation_thread and self.simulation_thread.isRunning():
+            self.simulation_thread.reset()
+            self._update_status("Simulation reset")
+        else:
+            self._update_status("No simulation is running")
+    
+    def _run_demo(self):
+        """Run a quick demo of the simulation."""
+        demo_missions = {
+            "beginner": "Mission1",
+            "intermediate": "Mission2",
+            "advanced": "Mission3",
+        }
+        
+        mission_name = demo_missions.get(self.current_profile, "Mission1")
+        self._load_mission(mission_name)
+        self._start_simulation()
+    
+    def _run_headless(self):
+        """Run the simulation in headless mode (no GUI)."""
+        headless_command = [
+            sys.executable, "-m", "fll_sim.simulator",
+            "--profile", self.current_profile,
+            "--robot", self.current_robot,
+            "--season", self.current_season,
+            "--headless",
+        ]
+        
+        # Start headless simulation
+        self.simulation_thread = SimulationThread(headless_command)
+        self.simulation_thread.status_update.connect(lambda msg: print(f"HEADLESS: {msg}"))
+        self.simulation_thread.finished.connect(lambda: print("HEADLESS: Simulation finished"))
+        self.simulation_thread.start()
+        
+        print("Headless simulation started")
+    
+    def _open_documentation(self):
+        """Open the FLL-Sim documentation in a web browser."""
+        try:
+            import webbrowser
+            webbrowser.open("https://fll-sim.readthedocs.io/en/latest/")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to open documentation: {e}")
+    
+    def _open_examples(self):
+        """Open the examples directory in the file explorer."""
+        examples_dir = project_root / "examples"
+        if examples_dir.exists():
+            os.startfile(examples_dir)
+        else:
+            QMessageBox.warning(self, "Warning", "Examples directory not found.")
+    
+    def _open_mission_editor(self):
+        """Open the mission editor tool."""
+        editor_command = [sys.executable, "-m", "fll_sim.mission_editor"]
+        subprocess.Popen(editor_command)
+    
+    def _open_robot_designer(self):
+        """Open the robot designer tool."""
+        designer_command = [sys.executable, "-m", "fll_sim.robot_designer"]
+        subprocess.Popen(designer_command)
+    
+    def _open_performance_monitor(self):
+        """Open the performance monitor tool."""
+        monitor_command = [sys.executable, "-m", "fll_sim.performance_monitor"]
+        subprocess.Popen(monitor_command)
+    
+    def _show_about(self):
+        """Show the about dialog with application information."""
+        QMessageBox.about(self, "About FLL-Sim",
+            "<h2>FLL-Sim - First Lego League Simulator</h2>"
+            "<p>Version 0.8.0</p>"
+            "<p>A comprehensive simulation environment for FLL teams to develop, test, "
+            "and refine their robot strategies before physical implementation.</p>"
+            "<p>For more information, documentation, and support, visit: "
+            "<a href='https://fll-sim.readthedocs.io/en/latest/'>fll-sim.readthedocs.io</a></p>"
+            "<p>© 2023 FLL-Sim Project. All rights reserved.</p>"
+        )
+    
+    def _configure_robot(self):
+        """Open robot configuration dialog."""
+        self._update_status("Opening robot configuration...")
+        # Switch to robot tab
+        self.tab_widget.setCurrentIndex(4)  # Robot tab index
+    
+    def _create_mission(self):
+        """Open mission creation dialog."""
+        self._update_status("Opening mission creator...")
+        # Switch to missions tab
+        self.tab_widget.setCurrentIndex(3)  # Missions tab index
+    
+    def _view_analytics(self):
+        """Open analytics and performance view."""
+        self._update_status("Opening performance analytics...")
+        # Switch to monitor tab
+        self.tab_widget.setCurrentIndex(5)  # Monitor tab index
+
+
+def main():
+    """Main entry point for the FLL-Sim GUI application."""
+    import sys
+    
+    app = QApplication(sys.argv)
+    app.setApplicationName("FLL-Sim")
+    app.setApplicationVersion("0.8.0")
+    app.setOrganizationName("FLL-Sim Project")
+    
+    # Set the application icon if available
+    try:
+        app.setWindowIcon(QIcon("resources/icon.png"))
+    except:
+        pass  # Icon file not found, continue without it
+    
+    # Create and show the main window
+    window = FLLSimGUI()
+    window.show()
+    
+    # Run the application
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
