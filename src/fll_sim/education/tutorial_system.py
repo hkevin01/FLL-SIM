@@ -39,41 +39,44 @@ class Tutorial:
     def get_current_step(self):
         return self.steps[self.current_step]
 
+    def reset(self):
+        self.current_step = 0
+        return self.steps[self.current_step]
+
+    def is_complete(self):
+        return self.current_step == len(self.steps) - 1
+
 
 class TutorialManager:
-    """Manages tutorials, user progress, and module loading."""
-
+    """Manages tutorials and user progress."""
     def __init__(self):
-        # Initialize tutorial registry and user progress tracking
-        self.tutorials = {}
-        self.user_progress = {}
-
-    def load_tutorials(self):
-        """Load available tutorials from content directory or plugins."""
-        pass
-
-    def start_tutorial(self, tutorial_id):
-        """Begin a tutorial session for the given tutorial ID."""
-        pass
-
-    def track_progress(self, user_id, tutorial_id, step):
-        """Track user progress through tutorial steps."""
-        pass
-
-    def get_progress(self, user_id, tutorial_id):
-        """Return current progress for a user in a tutorial."""
-        pass
+        self.tutorials: Dict[str, Tutorial] = {}
+        self.user_progress: Dict[str, int] = {}
 
     def add_tutorial(self, tutorial: Tutorial):
         self.tutorials[tutorial.name] = tutorial
-        self.user_progress[tutorial.name] = 0
 
-    def get_tutorial(self, name: str):
-        return self.tutorials.get(name)
+    def start_tutorial(self, name: str):
+        tutorial = self.tutorials.get(name)
+        if tutorial:
+            tutorial.reset()
+            return tutorial.get_current_step()
+        return None
 
-    def set_user_progress(self, tutorial_name: str, step_index: int):
-        if tutorial_name in self.tutorials:
-            self.user_progress[tutorial_name] = step_index
+    def next_step(self, name: str):
+        tutorial = self.tutorials.get(name)
+        if tutorial:
+            return tutorial.next_step()
+        return None
 
-    def get_user_progress(self, tutorial_name: str):
-        return self.user_progress.get(tutorial_name, 0)
+    def prev_step(self, name: str):
+        tutorial = self.tutorials.get(name)
+        if tutorial:
+            return tutorial.prev_step()
+        return None
+
+    def get_progress(self, name: str):
+        tutorial = self.tutorials.get(name)
+        if tutorial:
+            return tutorial.current_step, len(tutorial.steps)
+        return 0, 0

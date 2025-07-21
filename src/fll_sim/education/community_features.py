@@ -23,9 +23,11 @@ class CommunityManager:
     def __init__(self):
         self.shared_content: List[SharedContent] = []
         self.user_discussions: Dict[str, List[str]] = {}
+        self.user_likes: Dict[str, int] = {}
 
     def add_content(self, content: SharedContent):
         self.shared_content.append(content)
+        self.user_likes[content.title] = 0
 
     def get_all_content(self) -> List[SharedContent]:
         return self.shared_content
@@ -37,3 +39,10 @@ class CommunityManager:
 
     def get_discussions(self, content_title: str) -> List[str]:
         return self.user_discussions.get(content_title, [])
+
+    def like_content(self, content_title: str):
+        if content_title in self.user_likes:
+            self.user_likes[content_title] += 1
+
+    def get_likes(self, content_title: str) -> int:
+        return self.user_likes.get(content_title, 0)

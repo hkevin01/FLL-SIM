@@ -1,0 +1,24 @@
+{
+  "name": "fll-sim",
+  "version": "1.0.0",
+  "description": "First Lego League Robot and Map Simulator - Educational Platform & Community Phase",
+  "main": "src/fll_sim/__init__.py",
+  "scripts": {
+    "test": "fll-sim-env/bin/python -m unittest discover tests",
+    "lint": "flake8 src/",
+    "typecheck": "mypy src/",
+    "format": "black src/",
+    "coverage": "fll-sim-env/bin/python -m coverage run -m unittest discover tests && fll-sim-env/bin/python -m coverage html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hkevin01/FLL-SIM"
+  },
+  "author": "FLL-Sim Team",
+  "license": "MIT",
+  "devDependencies": {
+    "flake8": "*",
+    "mypy": "*",
+    "black": "*"
+  }
+}

@@ -1,12 +1,13 @@
 # FLL-Sim: First Lego League Robot and Map Simulator
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/hkevin01/FLL-SIM/ci.yml?branch=main)](https://github.com/hkevin01/FLL-SIM/actions)
-[![Version](https://img.shields.io/badge/version-0.9.0-blue)](https://github.com/hkevin01/FLL-SIM/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/hkevin01/FLL-SIM/releases)
 [![Coverage](https://img.shields.io/codecov/c/github/hkevin01/FLL-SIM?style=flat)](https://codecov.io/gh/hkevin01/FLL-SIM)
-[![Phase](https://img.shields.io/badge/phase-Educational%20Platform%20%26%20Community-yellow)](docs/project_plan.md)
-[![Educational Ready](https://img.shields.io/badge/educational-ready-brightgreen)](docs/project_plan.md)
-[![Multi-Robot](https://img.shields.io/badge/multi--robot-supported-blue)](docs/project_plan.md)
-[![AI Integration](https://img.shields.io/badge/AI-integration%20planned-purple)](docs/project_plan.md)
+[![Phase](https://img.shields.io/badge/phase-Educational%20Platform%20%26%20Community%20(In%20Progress)-yellow)](docs/project_plan.md)
+[![Automated Tests](https://img.shields.io/badge/automated%20tests-100%25%20educational%20coverage-success)](data/logs/test_output_log.txt)
+[![Developer Guide](https://img.shields.io/badge/developer%20guide-available-blue)](docs/developer_guide_education.md)
+[![Test Plan](https://img.shields.io/badge/test%20plan-updated-green)](docs/test_plan.md)
+[![Coding Standards](https://img.shields.io/badge/coding%20standards-PEP8%20%26%20mypy%20enforced-blue)](docs/project_plan.md)
 
 ---
 
@@ -16,6 +17,9 @@
 - All core competition features implemented and tested.
 - Multi-robot support, official timer, scoring, and advanced reliability simulation are live.
 - Educational modules (tutorial system, guided exercises) under development.
+- Developer guide for educational features now available.
+- Automated tests for all educational modules run in venv (`fll-sim-env/bin/python`).
+- Test plan and coding standards updated for Phase 4.
 - Ready for classroom, team, and tournament use. Community and curriculum features coming soon.
 
 ---
@@ -126,18 +130,19 @@ FLL-Sim/
 - [Project Plan](docs/project_plan.md)
 - [API Reference](docs/api_reference.md)
 - [User Guide](docs/user_guide.md)
-- [Developer Guide](docs/developer_guide.md)
+- [Developer Guide](docs/developer_guide_education.md)
 
 ## 🧪 Testing
 
-Run the test suite:
+Run the test suite (always use the project venv):
 ```bash
-pytest tests/
+fll-sim-env/bin/python -m unittest tests/
 ```
 
 Run with coverage:
 ```bash
-pytest tests/ --cov=src/fll_sim --cov-report=html
+fll-sim-env/bin/python -m coverage run -m unittest tests/
+fll-sim-env/bin/python -m coverage html
 ```
 
 ## 🤝 Contributing

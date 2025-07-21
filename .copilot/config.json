@@ -1,0 +1,10 @@
+{
+  "python_version": "3.12",
+  "venv_path": "fll-sim-env",
+  "linting": true,
+  "type_checking": "mypy",
+  "test_command": "fll-sim-env/bin/python -m unittest discover tests",
+  "formatting": "black",
+  "coverage": true,
+  "ignore_patterns": ["__pycache__", "*.pyc", "*.pyo", "*.egg-info", "build/", "dist/", "fll-sim-env/", ".env", ".venv", "env/", "venv/", "data/logs/", "data/cache/", "test_results/", ".benchmarks/"]
+}
