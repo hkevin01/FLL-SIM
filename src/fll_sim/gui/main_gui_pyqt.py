@@ -116,6 +116,11 @@ class FLLSimGUI(QMainWindow):
         
         # Cloud sync manager
         self.cloud_sync_manager = CloudSyncManager()
+        # Cloud sync scheduler and status reporter
+        from fll_sim.cloud.scheduler import CloudSyncScheduler
+        from fll_sim.cloud.status_reporter import CloudSyncStatusReporter
+        self.cloud_sync_scheduler = CloudSyncScheduler(self.cloud_sync_manager)
+        self.cloud_sync_status_reporter = CloudSyncStatusReporter(self.cloud_sync_manager)
         
         # Initialize GUI
         self._setup_ui()
@@ -308,6 +313,19 @@ class FLLSimGUI(QMainWindow):
         cloud_sync_btn = QPushButton("☁️ Sync Profile")
         cloud_sync_btn.clicked.connect(self.sync_profile_to_cloud)
         toolbar.addWidget(cloud_sync_btn)
+        
+        # Scheduler controls
+        start_scheduler_btn = QPushButton("▶️ Start Sync Scheduler")
+        start_scheduler_btn.clicked.connect(self.start_cloud_sync_scheduler)
+        toolbar.addWidget(start_scheduler_btn)
+        stop_scheduler_btn = QPushButton("⏹ Stop Sync Scheduler")
+        stop_scheduler_btn.clicked.connect(self.stop_cloud_sync_scheduler)
+        toolbar.addWidget(stop_scheduler_btn)
+        
+        # Status reporter button
+        status_report_btn = QPushButton("📋 Sync Status")
+        status_report_btn.clicked.connect(self.show_cloud_sync_status_history)
+        toolbar.addWidget(status_report_btn)
         
         toolbar.addSeparator()
         
@@ -805,3 +823,30 @@ class FLLSimGUI(QMainWindow):
         """Show the current cloud sync status."""
         items = self.cloud_sync_manager.get_synced_items()
         QMessageBox.information(self, "Cloud Sync Status", f"Synced items: {items}")
+    
+    def start_cloud_sync_scheduler(self):
+        """Start the cloud sync scheduler."""
+        try:
+            self.cloud_sync_scheduler.start()
+            self._update_status("Cloud sync scheduler started.")
+        except Exception as e:
+            self._update_status(f"Scheduler error: {e}")
+
+    def stop_cloud_sync_scheduler(self):
+        """Stop the cloud sync scheduler."""
+        try:
+            self.cloud_sync_scheduler.stop()
+            self._update_status("Cloud sync scheduler stopped.")
+        except Exception as e:
+            self._update_status(f"Scheduler error: {e}")
+
+    def show_cloud_sync_status_history(self):
+        """Show the cloud sync status history."""
+        try:
+            history = self.cloud_sync_status_reporter.get_history()
+            msg = '\n'.join([f"{h['timestamp']}: {h['item']} = {h['status']}" for h in history])
+            if not msg:
+                msg = "No sync history available."
+            QMessageBox.information(self, "Cloud Sync Status History", msg)
+        except Exception as e:
+            self._update_status(f"Status reporter error: {e}")

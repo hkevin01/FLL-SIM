@@ -59,3 +59,27 @@ class CloudUtils:
             self.logger.error(f"List backups error: {e}")
             from src.fll_sim.utils.errors import FLLSimError
             raise FLLSimError(f"List backups error: {e}") from e
+
+    def backup_exists(self, backup_dir, project_name):
+        import os
+        backup_path = os.path.join(backup_dir, project_name)
+        exists = os.path.exists(backup_path) and os.path.isdir(backup_path)
+        self.logger.info(f"Backup exists for {project_name}: {exists}")
+        return exists
+
+    def delete_backup(self, backup_dir, project_name):
+        import os
+        import shutil
+        backup_path = os.path.join(backup_dir, project_name)
+        try:
+            if os.path.exists(backup_path):
+                shutil.rmtree(backup_path)
+                self.logger.info(f"Backup deleted: {backup_path}")
+                return True
+            else:
+                self.logger.info(f"No backup found to delete: {backup_path}")
+                return False
+        except Exception as e:
+            self.logger.error(f"Delete backup error: {e}")
+            from src.fll_sim.utils.errors import FLLSimError
+            raise FLLSimError(f"Delete backup error: {e}") from e

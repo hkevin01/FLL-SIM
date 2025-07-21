@@ -488,12 +488,14 @@ class EV3Brick:
         @staticmethod
         def on(color: Color):
             """Turn on light with specified color."""
-            pass  # Could be visualized in renderer
+            print(f"Light turned on with color: {color}")
+            # TODO: Integrate with simulation renderer
         
         @staticmethod
         def off():
             """Turn off light."""
-            pass
+            print("Light turned off")
+            # TODO: Integrate with simulation renderer
     
     class speaker:
         """Control brick speaker."""
@@ -501,7 +503,8 @@ class EV3Brick:
         @staticmethod
         def beep(frequency: int = 1000, duration: int = 100):
             """Play a beep."""
-            pass  # Could play actual sound
+            print(f"Speaker beep: {frequency}Hz for {duration}ms")
+            # TODO: Integrate with simulation sound system
         
         @staticmethod
         def say(text: str):

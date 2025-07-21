@@ -1201,18 +1201,21 @@ class FLLSimGUI(QMainWindow):
         self.logging_checkbox.setChecked(config_data.get("logging", False))
         
         # TODO: Apply other configuration settings as needed
+        # Example: self.some_setting_checkbox.setChecked(config_data.get("some_setting", False))
     
     def _export_configuration(self):
         """Export the current configuration to a dictionary."""
-        return {
+        config = {
             "profile": self.current_profile,
             "robot": self.current_robot,
             "season": self.current_season,
             "debug": self.debug_checkbox.isChecked(),
             "performance_monitor": self.performance_checkbox.isChecked(),
             "logging": self.logging_checkbox.isChecked(),
-            # TODO: Add other settings as needed
+            # Add other settings here as needed
         }
+        # TODO: Export additional settings if implemented
+        return config
     
     def _start_simulation(self):
         """Start the simulation with the current settings."""

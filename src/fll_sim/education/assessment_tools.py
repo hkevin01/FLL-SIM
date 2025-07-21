@@ -23,7 +23,8 @@ class Assessment:
         self.name = name
 
     def grade(self, submission: Any) -> AssessmentResult:
-        raise NotImplementedError
+        # Default implementation for base class
+        return AssessmentResult(0.0, "No grading logic implemented.")
 
 
 class AssessmentManager:
