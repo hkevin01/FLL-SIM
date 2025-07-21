@@ -304,6 +304,11 @@ class FLLSimGUI(QMainWindow):
         demo_btn.clicked.connect(self._run_demo)
         toolbar.addWidget(demo_btn)
         
+        # Cloud sync button
+        cloud_sync_btn = QPushButton("☁️ Sync Profile")
+        cloud_sync_btn.clicked.connect(self.sync_profile_to_cloud)
+        toolbar.addWidget(cloud_sync_btn)
+        
         toolbar.addSeparator()
         
         # Progress bar
@@ -329,8 +334,9 @@ class FLLSimGUI(QMainWindow):
         welcome_layout.addWidget(title_label)
         
         desc_label = QLabel(
-            "A comprehensive simulation environment for FLL teams to develop,\n"
-            "test, and refine their robot strategies before physical implementation."
+            "A comprehensive simulation environment for FLL teams to develop, "
+            "test, and refine their robot strategies before physical "
+            "implementation."
         )
         desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         desc_label.setWordWrap(True)
@@ -344,17 +350,17 @@ class FLLSimGUI(QMainWindow):
         
         # Quick action buttons
         buttons = [
-            ("🚀 Start Simulation", self._start_simulation, 
+            ("🚀 Start Simulation", self._start_simulation,
              "Launch the full simulation"),
-            ("🎮 Run Demo", self._run_demo, 
+            ("🎮 Run Demo", self._run_demo,
              "Try a quick demonstration"),
-            ("📚 View Examples", self._open_examples, 
+            ("📚 View Examples", self._open_examples,
              "Browse example programs"),
-            ("⚙️ Configure Robot", self._configure_robot, 
+            ("⚙️ Configure Robot", self._configure_robot,
              "Set up your robot"),
-            ("🗺️ Load Mission", self._load_mission, 
+            ("🗺️ Load Mission", self._load_mission,
              "Choose FLL missions"),
-            ("📊 Performance Monitor", self._open_performance_monitor, 
+            ("📊 Performance Monitor", self._open_performance_monitor,
              "Track robot performance")
         ]
         
@@ -407,7 +413,11 @@ class FLLSimGUI(QMainWindow):
         robot_layout = QFormLayout(robot_group)
         
         self.robot_combo = QComboBox()
-        self.robot_combo.addItems(['standard_fll', 'compact_robot', 'heavy_pusher'])
+        self.robot_combo.addItems([
+            'standard_fll',
+            'compact_robot',
+            'heavy_pusher'
+        ])
         self.robot_combo.setCurrentText(self.current_robot)
         self.robot_combo.currentTextChanged.connect(self._on_robot_changed)
         robot_layout.addRow("Robot Type:", self.robot_combo)
@@ -766,3 +776,32 @@ class FLLSimGUI(QMainWindow):
         self.mission_description.setText(descriptions.get(mission_name, "Mission description not available."))
         self.max_score_label.setText("100")
         self.time_limit_label.setText("2:30")
+    
+    def sync_profile_to_cloud(self):
+        """Sync the current user profile to the cloud."""
+        try:
+            self.cloud_sync_manager.sync_profile(self.current_profile)
+            self._update_status(f"Profile '{self.current_profile}' synced to cloud.")
+        except Exception as e:
+            self._update_status(f"Cloud sync error: {e}")
+
+    def sync_project_to_cloud(self, project):
+        """Sync the given project to the cloud."""
+        try:
+            self.cloud_sync_manager.sync_project(project)
+            self._update_status(f"Project '{project}' synced to cloud.")
+        except Exception as e:
+            self._update_status(f"Cloud sync error: {e}")
+
+    def rollback_cloud_sync(self, index):
+        """Rollback a cloud sync operation by index."""
+        try:
+            item = self.cloud_sync_manager.rollback(index)
+            self._update_status(f"Rolled back cloud sync for: {item}")
+        except Exception as e:
+            self._update_status(f"Cloud sync rollback error: {e}")
+
+    def show_cloud_sync_status(self):
+        """Show the current cloud sync status."""
+        items = self.cloud_sync_manager.get_synced_items()
+        QMessageBox.information(self, "Cloud Sync Status", f"Synced items: {items}")
