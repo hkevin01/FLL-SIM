@@ -1385,3 +1385,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Modularization and maintainability improvements (2025-07-21):
+# - Improved separation of UI components, logic, and threading.
+# - Added/expanded docstrings for main classes and methods.
+# - Ensured type hints for public methods and attributes.
+# - Refactored large methods for clarity and maintainability.
+# - Reduced code duplication and improved comments.

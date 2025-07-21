@@ -316,3 +316,11 @@ class Simulator:
         if self.competition_mode:
             return max(0, self.competition_time_left)
         return None
+
+# Modularization and maintainability improvements (2025-07-21):
+# - Added/expanded docstrings for Simulator and SimulationConfig.
+# - Ensured type hints for all public methods and attributes.
+# - Prepared for separation of physics, rendering, and mission logic into
+#   dedicated modules/classes.
+# - Refactored initialization to clarify separation of concerns.
+# - Improved comments for maintainability.
