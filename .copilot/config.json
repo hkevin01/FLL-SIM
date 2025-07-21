@@ -6,5 +6,31 @@
   "test_command": "fll-sim-env/bin/python -m unittest discover tests",
   "formatting": "black",
   "coverage": true,
-  "ignore_patterns": ["__pycache__", "*.pyc", "*.pyo", "*.egg-info", "build/", "dist/", "fll-sim-env/", ".env", ".venv", "env/", "venv/", "data/logs/", "data/cache/", "test_results/", ".benchmarks/"]
+  "ignore_patterns": [
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "*.egg-info",
+    "build/",
+    "dist/",
+    "fll-sim-env/",
+    ".env",
+    ".venv",
+    "env/",
+    "venv/",
+    "data/logs/",
+    "data/cache/",
+    "test_results/",
+    ".benchmarks/",
+    "node_modules/",
+    ".github/",
+    ".copilot/",
+    "assets/",
+    "simulation_data/",
+    "models/",
+    "*.log",
+    "*.tmp",
+    "*.bak",
+    "*.backup"
+  ]
 }

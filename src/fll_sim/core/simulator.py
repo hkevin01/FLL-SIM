@@ -16,6 +16,8 @@ import pymunk.pygame_util
 from ..environment.game_map import GameMap
 from ..robot.robot import Robot
 from ..visualization.renderer import Renderer
+from ..utils.logger import FLLLogger
+from ..utils.errors import FLLSimError, ConfigError
 
 
 @dataclass
@@ -67,37 +69,44 @@ class Simulator:
         self.game_map = game_map
         self.config = config or SimulationConfig()
         
-        # Initialize physics
-        self.space = pymunk.Space()
-        self.space.gravity = self.config.gravity
-        
-        # Initialize pygame
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.config.window_width, self.config.window_height))
-        pygame.display.set_caption("FLL-Sim - First Lego League Simulator")
-        self.clock = pygame.time.Clock()
-        
-        # Initialize renderer
-        self.renderer = Renderer(self.screen, self.space)
-        
-        # Simulation state
-        self.running = False
-        self.paused = False
-        self.simulation_time = 0.0
-        self.frame_count = 0
-        
-        # Event callbacks
-        self.on_mission_complete: List[Callable] = []
-        self.on_collision: List[Callable] = []
-        
-        # Competition mode
-        self.competition_mode = competition_mode
-        self.competition_time_limit = competition_time_limit
-        self.competition_time_left = competition_time_limit
-        
-        # Setup simulation
-        self._setup_physics()
-        self._setup_input_handlers()
+        # Initialize logger
+        self.logger = FLLLogger('Simulator')
+        try:
+            # Initialize physics
+            self.space = pymunk.Space()
+            self.space.gravity = self.config.gravity
+            
+            # Initialize pygame
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.config.window_width, self.config.window_height))
+            pygame.display.set_caption("FLL-Sim - First Lego League Simulator")
+            self.clock = pygame.time.Clock()
+            
+            # Initialize renderer
+            self.renderer = Renderer(self.screen, self.space)
+            
+            # Simulation state
+            self.running = False
+            self.paused = False
+            self.simulation_time = 0.0
+            self.frame_count = 0
+            
+            # Event callbacks
+            self.on_mission_complete: List[Callable] = []
+            self.on_collision: List[Callable] = []
+            
+            # Competition mode
+            self.competition_mode = competition_mode
+            self.competition_time_limit = competition_time_limit
+            self.competition_time_left = competition_time_limit
+            
+            # Setup simulation
+            self._setup_physics()
+            self._setup_input_handlers()
+            self.logger.info("Simulator initialized successfully.")
+        except Exception as e:
+            self.logger.error(f"Simulator initialization failed: {e}")
+            raise FLLSimError(f"Simulator initialization error: {e}")
     
     def _setup_physics(self):
         """Setup the physics world with robot and environment."""

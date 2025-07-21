@@ -1,0 +1,12 @@
+{
+  "plugin_directory": "src/fll_sim/plugins/",
+  "default_language": "en",
+  "accessibility": {
+    "screen_reader": false,
+    "keyboard_navigation": true
+  },
+  "logging": {
+    "log_file": "data/logs/app.log",
+    "log_level": "INFO"
+  }
+}

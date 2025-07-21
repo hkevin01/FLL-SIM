@@ -16,6 +16,8 @@ import yaml
 from ..core.simulator import SimulationConfig
 from ..robot.pybricks_api import PybricksConfig
 from ..robot.robot import RobotConfig
+from ..utils.logger import FLLLogger
+from ..utils.errors import ConfigError
 
 
 @dataclass
@@ -38,31 +40,12 @@ class ConfigManager:
     Handles loading, saving, and validation of simulation configurations.
     """
     
-    def __init__(self, config_dir: Optional[str] = None):
-        """
-        Initialize configuration manager.
-        
-        Args:
-            config_dir: Directory to store configuration files
-        """
-        if config_dir is None:
-            # Default to configs directory in project root
-            project_root = Path(__file__).parent.parent.parent.parent
-            config_dir = project_root / "configs"
-        
-        self.config_dir = Path(config_dir)
-        self.config_dir.mkdir(exist_ok=True)
-        
-        # Create subdirectories
-        (self.config_dir / "robots").mkdir(exist_ok=True)
-        (self.config_dir / "simulations").mkdir(exist_ok=True)
-        (self.config_dir / "maps").mkdir(exist_ok=True)
-        (self.config_dir / "missions").mkdir(exist_ok=True)
-        (self.config_dir / "profiles").mkdir(exist_ok=True)
-        
-        # Load default configurations
-        self._create_default_configs()
-    
+    def __init__(self):
+        self.logger = FLLLogger('ConfigManager')
+        self.profiles: List[SimulationProfile] = []
+        self.active_profile: Optional[SimulationProfile] = None
+        self.logger.info("ConfigManager initialized.")
+
     def _create_default_configs(self):
         """Create default configuration files if they don't exist."""
         
@@ -486,3 +469,29 @@ class ConfigManager:
             yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
         
         return base
+
+    def load_profile(self, profile_path: str) -> None:
+        """Load a simulation profile from a YAML file."""
+        try:
+            with open(profile_path, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+            
+            # Validate and parse profile data
+            profile = SimulationProfile(
+                name=data["name"],
+                description=data["description"],
+                robot_config=self.load_robot_config(data["robot_config"]),
+                simulation_config=self.load_simulation_config(data["simulation_config"]),
+                pybricks_config=self.load_pybricks_config(data["pybricks_config"]),
+                fll_season=data["fll_season"],
+                map_config=data.get("map_config"),
+                mission_config=data.get("mission_config")
+            )
+            
+            self.profiles.append(profile)
+            self.active_profile = profile
+            
+            self.logger.info(f"Loaded profile '{profile.name}' from {profile_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to load profile: {e}")
+            raise ConfigError(f"Error loading profile: {e}")

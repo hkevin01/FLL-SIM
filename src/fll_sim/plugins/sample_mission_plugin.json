@@ -1,0 +1,16 @@
+"""
+Plugin Content Example
+
+Sample plugin for FLL-Sim demonstrating mission extension.
+"""
+{
+  "type": "mission",
+  "name": "Sample Mission Plugin",
+  "description": "A sample mission plugin for demonstration purposes.",
+  "version": "0.1.0",
+  "author": "FLL-Sim Team",
+  "tasks": [
+    {"id": "task1", "description": "Complete the first objective."},
+    {"id": "task2", "description": "Complete the second objective."}
+  ]
+}

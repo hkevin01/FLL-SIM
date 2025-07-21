@@ -5,16 +5,16 @@ Provides interactive coding exercises with hints, solutions, and progress tracki
 Designed for modularity, extensibility, and integration with the main GUI.
 """
 
+from typing import Dict, Any
+
 class ExerciseManager:
     """Manages guided exercises, hints, solutions, and user progress."""
     def __init__(self):
-        # Initialize exercise registry and user progress tracking
-        self.exercises = {}
-        self.user_progress = {}
+        self.exercises: Dict[str, Dict[str, Any]] = {}
+        self.user_progress: Dict[str, Dict[str, Any]] = {}
 
-    def load_exercises(self):
+    def load_exercises(self) -> None:
         """Load available exercises from content directory or plugins."""
-        # Example: Load exercises from a static dictionary
         self.exercises = {
             "ex1": {
                 "steps": ["step1", "step2"],
@@ -23,21 +23,21 @@ class ExerciseManager:
             },
         }
 
-    def start_exercise(self, exercise_id):
+    def start_exercise(self, exercise_id: str) -> Any:
         """Begin a guided exercise session for the given exercise ID."""
         if exercise_id in self.exercises:
             self.user_progress[exercise_id] = {"step": 0, "completed": False}
             return self.exercises[exercise_id]["steps"][0]
         return None
 
-    def provide_hint(self, exercise_id, step):
+    def provide_hint(self, exercise_id: str, step: int) -> str:
         """Provide a hint for the current step in an exercise."""
         ex = self.exercises.get(exercise_id)
         if ex and step < len(ex["hints"]):
             return ex["hints"][step]
         return "No hint available."
 
-    def check_solution(self, exercise_id, user_code):
+    def check_solution(self, exercise_id: str, user_code: str) -> bool:
         """Check user-submitted code against the solution."""
         ex = self.exercises.get(exercise_id)
         if ex and user_code.strip() == ex["solution"].strip():
@@ -45,12 +45,12 @@ class ExerciseManager:
             return True
         return False
 
-    def track_progress(self, user_id, exercise_id, step):
+    def track_progress(self, user_id: str, exercise_id: str, step: int) -> None:
         """Track user progress through exercise steps."""
         key = f"{user_id}:{exercise_id}"
         self.user_progress[key] = {"step": step}
 
-    def get_progress(self, user_id, exercise_id):
+    def get_progress(self, user_id: str, exercise_id: str) -> Dict[str, Any]:
         """Return current progress for a user in an exercise."""
         key = f"{user_id}:{exercise_id}"
         return self.user_progress.get(key, {"step": 0})

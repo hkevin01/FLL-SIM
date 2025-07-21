@@ -8,6 +8,9 @@
 [![Developer Guide](https://img.shields.io/badge/developer%20guide-available-blue)](docs/developer_guide_education.md)
 [![Test Plan](https://img.shields.io/badge/test%20plan-updated-green)](docs/test_plan.md)
 [![Coding Standards](https://img.shields.io/badge/coding%20standards-PEP8%20%26%20mypy%20enforced-blue)](docs/project_plan.md)
+[![Analytics](https://img.shields.io/badge/analytics-advanced%20reporting%20planned-blue)](docs/project_plan.md)
+[![Accessibility](https://img.shields.io/badge/accessibility-improvements%20planned-blue)](docs/project_plan.md)
+[![Cloud Sync](https://img.shields.io/badge/cloud%20sync-collaboration%20planned-blue)](docs/project_plan.md)
 
 ---
 

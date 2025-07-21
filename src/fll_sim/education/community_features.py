@@ -46,3 +46,46 @@ class CommunityManager:
 
     def get_likes(self, content_title: str) -> int:
         return self.user_likes.get(content_title, 0)
+
+    # Community features for Phase 4.5 and beyond
+    def add_mission(self, mission_id, mission_data):
+        if not hasattr(self, 'missions'):
+            self.missions = {}
+        self.missions[mission_id] = mission_data
+
+    def add_robot(self, robot_id, robot_data):
+        if not hasattr(self, 'robots'):
+            self.robots = {}
+        self.robots[robot_id] = robot_data
+
+    def add_project(self, project_id, project_data):
+        if not hasattr(self, 'projects'):
+            self.projects = {}
+        self.projects[project_id] = project_data
+
+    def add_forum_post(self, forum_id, post):
+        if not hasattr(self, 'forums'):
+            self.forums = {}
+        if forum_id not in self.forums:
+            self.forums[forum_id] = []
+        self.forums[forum_id].append(post)
+
+    def add_competition(self, comp_id, comp_data):
+        if not hasattr(self, 'competitions'):
+            self.competitions = {}
+        self.competitions[comp_id] = comp_data
+
+    def get_mission(self, mission_id):
+        return getattr(self, 'missions', {}).get(mission_id)
+
+    def get_robot(self, robot_id):
+        return getattr(self, 'robots', {}).get(robot_id)
+
+    def get_project(self, project_id):
+        return getattr(self, 'projects', {}).get(project_id)
+
+    def get_forum_posts(self, forum_id):
+        return getattr(self, 'forums', {}).get(forum_id, [])
+
+    def get_competition(self, comp_id):
+        return getattr(self, 'competitions', {}).get(comp_id)
