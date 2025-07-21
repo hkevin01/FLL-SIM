@@ -1358,6 +1358,15 @@ class FLLSimGUI(QMainWindow):
         self._update_status("Opening performance analytics...")
         # Switch to monitor tab
         self.tab_widget.setCurrentIndex(5)  # Monitor tab index
+    
+    def _load_mission(self, mission_name=None):
+        """Load a mission by name or show a selection dialog."""
+        if mission_name is None:
+            # If no mission specified, show a dialog or use default
+            mission_name = "Default Mission"
+        # Example: update mission tab or load mission data
+        self.status_label.setText(f"Mission loaded: {mission_name}")
+        # Add actual mission loading logic here
 
 
 def main():
@@ -1372,7 +1381,7 @@ def main():
     # Set the application icon if available
     try:
         app.setWindowIcon(QIcon("resources/icon.png"))
-    except:
+    except Exception:
         pass  # Icon file not found, continue without it
     
     # Create and show the main window
