@@ -5,7 +5,7 @@
   "main": "src/fll_sim/__init__.py",
   "scripts": {
     "test": "fll-sim-env/bin/python -m unittest discover tests",
-    "lint": "flake8 src/",
+    "lint": "flake8 src/ tests/",
     "typecheck": "mypy src/",
     "format": "black src/",
     "coverage": "fll-sim-env/bin/python -m coverage run -m unittest discover tests && fll-sim-env/bin/python -m coverage html"

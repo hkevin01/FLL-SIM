@@ -43,3 +43,25 @@ class AnalyticsDashboard:
 
     def get_stats(self) -> Dict[str, Any]:
         return self.stats
+
+"""
+Moderation Analytics Module
+
+Provides analytics and reporting for community moderation in FLL-Sim.
+"""
+
+class ModerationAnalytics:
+    """Manages analytics and reporting for moderation events."""
+    def __init__(self):
+        self.logger = FLLLogger("ModerationAnalytics")
+        self.moderation_events = []
+
+    def log_event(self, event):
+        try:
+            self.moderation_events.append(event)
+            self.logger.info(f"Moderation event logged: {event}")
+        except Exception as e:
+            self.logger.error(f"Error logging moderation event: {e}")
+
+    def get_event_history(self):
+        return self.moderation_events

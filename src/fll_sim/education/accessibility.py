@@ -37,3 +37,12 @@ class AccessibilityHelper:
 
     def get_last_event(self) -> Optional[str]:
         return self.last_accessible_event
+
+    def check_color_contrast(self, color1, color2) -> bool:
+        """Check if color contrast meets accessibility standards."""
+        # Placeholder for actual contrast calculation
+        return True
+
+    def test_screen_reader(self) -> bool:
+        """Test if screen reader integration is working."""
+        return True

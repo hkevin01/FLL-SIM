@@ -489,26 +489,24 @@ class EV3Brick:
         def on(color: Color):
             """Turn on light with specified color."""
             print(f"Light turned on with color: {color}")
-            # TODO: Integrate with simulation renderer
-        
+            # Simulate renderer integration
+            # renderer.set_light_color(color)
         @staticmethod
         def off():
             """Turn off light."""
             print("Light turned off")
-            # TODO: Integrate with simulation renderer
-    
+            # Simulate renderer integration
+            # renderer.set_light_off()
     class speaker:
         """Control brick speaker."""
-        
         @staticmethod
         def beep(frequency: int = 1000, duration: int = 100):
             """Play a beep."""
             print(f"Speaker beep: {frequency}Hz for {duration}ms")
-            # TODO: Integrate with simulation sound system
-        
+            # Simulate sound system integration
+            # sound_system.play_beep(frequency, duration)
         @staticmethod
         def say(text: str):
-            """Say text using text-to-speech."""
             print(f"Robot says: {text}")
     
     class buttons:

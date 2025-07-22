@@ -43,3 +43,14 @@ class MissionTemplateUtils:
         except Exception as e:
             self.logger.error(f"Load template error: {e}")
             raise FLLSimError(f"Load template error: {e}") from e
+
+class TemplateManager:
+    """Manages mission and robot templates for FLL-Sim ecosystem."""
+    def __init__(self):
+        self.templates = {}
+    def add_template(self, name: str, template: dict) -> None:
+        self.templates[name] = template
+    def get_template(self, name: str) -> dict:
+        return self.templates.get(name, {})
+    def list_templates(self) -> list:
+        return list(self.templates.keys())

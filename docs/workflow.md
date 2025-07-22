@@ -26,11 +26,14 @@
 
 ## Configuration
 - Main config: `config/app_config.json`
-- .copilot/config.json and package.json for dev tooling
+- `.copilot/config.json` and `package.json` for dev tooling
+- `.github/` for CI, PR templates, and issue templates
+- `.gitignore` for common Python, venv, logs, and IDE files
 
 ## Contribution
 - See `docs/developer_onboarding.md` for onboarding
 - Open issues or PRs for improvements
+- Use `.github/PULL_REQUEST_TEMPLATE.md` for PRs
 
 ## Common Commands
 - `npm run lint` (lint Python code)
@@ -38,6 +41,8 @@
 - `npm run format` (format code)
 - `npm run test` (run tests)
 - `npm run coverage` (run coverage)
+- `pytest` (run all tests)
+- `python setup.py` (run setup)
 
 ## Automation & Advanced Testing
 - All new features require unit, integration, and edge case tests

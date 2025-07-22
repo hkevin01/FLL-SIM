@@ -58,6 +58,8 @@ sys.path.insert(0, str(project_root / "src"))
 from fll_sim.config.config_manager import ConfigManager
 from fll_sim.core.simulator import SimulationConfig
 from fll_sim.robot.robot import RobotConfig
+from src.fll_sim.gui.backup_manager import BackupManagerWidget
+from src.fll_sim.gui.moderation_dashboard import ModerationDashboardWidget
 
 
 class SimulationThread(QThread):
@@ -189,6 +191,8 @@ class FLLSimGUI(QMainWindow):
         self._create_missions_tab()
         self._create_robot_tab()
         self._create_monitor_tab()
+        self._create_backup_tab()
+        self._create_moderation_tab()
         
         # Set up keyboard shortcuts
         self._setup_shortcuts()
@@ -1045,6 +1049,16 @@ class FLLSimGUI(QMainWindow):
         layout.addStretch()
         
         self.tab_widget.addTab(widget, "Monitor")
+    
+    def _create_backup_tab(self):
+        """Create the backup management tab."""
+        widget = BackupManagerWidget()
+        self.tab_widget.addTab(widget, "Backup Manager")
+    
+    def _create_moderation_tab(self):
+        """Create the moderation dashboard tab."""
+        widget = ModerationDashboardWidget()
+        self.tab_widget.addTab(widget, "Moderation Dashboard")
     
     def _load_initial_data(self):
         """Load initial application data."""

@@ -1,0 +1,6 @@
+{
+  "backup_dir": "data/backups",
+  "schedule_interval": 3600,
+  "max_backup_count": 10,
+  "auto_cleanup": true
+}

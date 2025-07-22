@@ -220,3 +220,39 @@ fll-sim
 # Test artifacts
 test_results/
 .benchmarks/
+
+# Virtual environments
+venv/
+fll-sim-env/
+.env/
+.venv/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and coverage
+*.log
+*.coverage
+coverage/
+htmlcov/
+data/logs/
+data/cache/
+test_results/
+
+# Node modules (if any)
+node_modules/
+
+# Copilot and GitHub config
+.copilot/
+.github/
+
+# Misc
+*.tmp
+*.bak
+*.backup
+assets/
+simulation_data/
+models/
