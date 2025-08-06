@@ -1,0 +1,307 @@
+# Development Database and Infrastructure Stack
+version: "3.8"
+
+services:
+  # PostgreSQL with extensions for development
+  postgres:
+    image: postgres:15-alpine
+    container_name: dev-postgres
+    environment:
+      POSTGRES_DB: devdb
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_MULTIPLE_DATABASES: "testdb,stagedb"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U developer -d devdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MySQL for projects requiring MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: dev-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: devdb
+      MYSQL_USER: developer
+      MYSQL_PASSWORD: devpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/mysql-init:/docker-entrypoint-initdb.d
+      - ./config/my.cnf:/etc/mysql/conf.d/custom.cnf
+    networks:
+      - dev-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "developer",
+          "-pdevpass",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: dev-redis
+    command: redis-server --appendonly yes --requirepass devpass
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "devpass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MongoDB for document storage
+  mongodb:
+    image: mongo:7
+    container_name: dev-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: developer
+      MONGO_INITDB_ROOT_PASSWORD: devpass
+      MONGO_INITDB_DATABASE: devdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Elasticsearch for search capabilities
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: dev-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - dev-network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # pgAdmin for PostgreSQL administration
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dev-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dev.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./config/servers.json:/pgadmin4/servers.json
+    networks:
+      - dev-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # phpMyAdmin for MySQL administration
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: dev-phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: developer
+      PMA_PASSWORD: devpass
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8081:80"
+    networks:
+      - dev-network
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  # Redis Commander for Redis administration
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: dev-redis-commander
+    environment:
+      REDIS_HOSTS: "local:redis:6379:0:devpass"
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    ports:
+      - "8082:8081"
+    networks:
+      - dev-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Mongo Express for MongoDB administration
+  mongo-express:
+    image: mongo-express:latest
+    container_name: dev-mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: developer
+      ME_CONFIG_MONGODB_ADMINPASSWORD: devpass
+      ME_CONFIG_MONGODB_URL: mongodb://developer:devpass@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8083:8081"
+    networks:
+      - dev-network
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  # MinIO for S3-compatible object storage
+  minio:
+    image: minio/minio:latest
+    container_name: dev-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: developer
+      MINIO_ROOT_PASSWORD: devpass123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  # NGINX for reverse proxy and load balancing
+  nginx:
+    image: nginx:alpine
+    container_name: dev-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # RabbitMQ for message queuing
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: dev-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: developer
+      RABBITMQ_DEFAULT_PASS: devpass
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: dev-mailhog
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Database backup service
+  db-backup:
+    image: alpine:latest
+    container_name: dev-db-backup
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh
+    networks:
+      - dev-network
+    depends_on:
+      - postgres
+      - mysql
+      - mongodb
+    command: |
+      sh -c "
+        apk add --no-cache postgresql-client mysql-client mongodb-tools
+        chmod +x /backup.sh
+        while true; do
+          /backup.sh
+          sleep 86400  # Run daily
+        done
+      "
+    restart: unless-stopped
+
+networks:
+  dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+  mysql_data:
+  redis_data:
+  mongodb_data:
+  elasticsearch_data:
+  pgadmin_data:
+  minio_data:
+  rabbitmq_data:
+  nginx_logs:

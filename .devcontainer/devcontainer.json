@@ -1,0 +1,290 @@
+{
+  "name": "Universal Development Environment",
+  "dockerComposeFile": ["../docker/docker-compose.dev.yml", "../docker/docker-compose.devcontainer.yml"],
+  "service": "vscode-dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+
+  // Configure VS Code settings
+  "customizations": {
+    "vscode": {
+      "settings": {
+        // Editor settings
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        "editor.rulers": [80, 120],
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": true,
+        "editor.trimAutoWhitespace": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": true,
+
+        // Python settings
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "python.formatting.provider": "black",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.flake8Enabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.testing.nosetestsEnabled": false,
+
+        // JavaScript/TypeScript settings
+        "typescript.preferences.quoteStyle": "single",
+        "javascript.preferences.quoteStyle": "single",
+        "eslint.validate": ["javascript", "typescript", "vue", "svelte"],
+        "prettier.singleQuote": true,
+        "prettier.semi": true,
+        "prettier.trailingComma": "es5",
+
+        // Go settings
+        "go.formatTool": "goimports",
+        "go.lintTool": "golangci-lint",
+        "go.testFlags": ["-v"],
+        "go.coverOnSave": true,
+
+        // Rust settings
+        "rust-analyzer.check.command": "clippy",
+        "rust-analyzer.formatting.enable": true,
+
+        // Java settings
+        "java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+        "java.configuration.runtimes": [
+          {
+            "name": "JavaSE-17",
+            "path": "/usr/lib/jvm/java-17-openjdk-amd64"
+          }
+        ],
+
+        // Docker settings
+        "docker.defaultRegistryPath": "localhost:5000",
+
+        // Git settings
+        "git.autofetch": true,
+        "git.enableSmartCommit": true,
+        "git.confirmSync": false,
+
+        // Terminal settings
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash",
+            "args": []
+          },
+          "zsh": {
+            "path": "/bin/zsh",
+            "args": []
+          }
+        },
+
+        // File associations
+        "files.associations": {
+          "*.dockerfile": "dockerfile",
+          "Dockerfile.*": "dockerfile",
+          "docker-compose*.yml": "dockercompose",
+          "docker-compose*.yaml": "dockercompose",
+          "*.env": "properties",
+          "*.env.*": "properties"
+        },
+
+        // Workspace settings
+        "workbench.colorTheme": "Default Dark+",
+        "workbench.iconTheme": "vs-seti",
+        "workbench.startupEditor": "newUntitledFile",
+
+        // Security settings
+        "security.workspace.trust.enabled": false
+      },
+
+      // Essential extensions
+      "extensions": [
+        // Language support
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.pylint",
+        "ms-python.mypy-type-checker",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "golang.go",
+        "rust-lang.rust-analyzer",
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+
+        // Web development
+        "ms-vscode.vscode-json",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "stylelint.vscode-stylelint",
+        "ms-vscode.vscode-css-languageservice",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+
+        // Framework support
+        "vue.volar",
+        "svelte.svelte-vscode",
+        "ms-vscode.vscode-node-azure-pack",
+        "ms-vscode-remote.remote-containers",
+
+        // DevOps and Infrastructure
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "hashicorp.terraform",
+        "ms-vscode.powershell",
+
+        // Database
+        "ms-mssql.mssql",
+        "ms-ossdata.vscode-postgresql",
+        "mongodb.mongodb-vscode",
+        "redis.redis-for-vscode",
+
+        // Testing
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer",
+        "ms-playwright.playwright",
+        "ms-vscode.vscode-jest",
+
+        // Code quality and security
+        "sonarqube.sonarqube-for-ide",
+        "ms-vscode.vscode-security-scan",
+        "ms-vscode.vscode-sarif-viewer",
+
+        // Git and version control
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "donjayamanne.githistory",
+
+        // Documentation
+        "yzhang.markdown-all-in-one",
+        "shd101wyy.markdown-preview-enhanced",
+        "davidanson.vscode-markdownlint",
+
+        // Productivity
+        "ms-vscode.vscode-todo-highlight",
+        "gruntfuggly.todo-tree",
+        "alefragnani.bookmarks",
+        "ms-vscode.vscode-fold-plus",
+        "streetsidesoftware.code-spell-checker",
+
+        // Themes and icons
+        "pkief.material-icon-theme",
+        "zhuangtongfa.material-theme",
+        "github.github-vscode-theme",
+
+        // Remote development
+        "ms-vscode-remote.remote-ssh",
+        "ms-vscode-remote.remote-ssh-edit",
+        "ms-vscode-remote.remote-containers"
+      ]
+    }
+  },
+
+  // Forward ports
+  "forwardPorts": [
+    3000,  // Frontend dev server
+    3001,  // Alternative frontend port
+    5000,  // Backend API
+    5432,  // PostgreSQL
+    3306,  // MySQL
+    6379,  // Redis
+    27017, // MongoDB
+    9200,  // Elasticsearch
+    5601,  // Kibana
+    8080,  // Alternative backend port
+    8081,  // pgAdmin
+    8082,  // phpMyAdmin
+    8083,  // Redis Commander
+    8084,  // Mongo Express
+    9000,  // MinIO
+    9001,  // MinIO Console
+    15672, // RabbitMQ Management
+    8025,  // Mailhog
+    80,    // NGINX
+    443    // NGINX SSL
+  ],
+
+  // Post-create commands
+  "postCreateCommand": "/workspace/.devcontainer/post-create.sh",
+
+  // Post-start commands
+  "postStartCommand": "/workspace/.devcontainer/post-start.sh",
+
+  // Container user
+  "remoteUser": "developer",
+
+  // Mount workspace
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "source=vscode-extensions,target=/home/developer/.vscode-server/extensions,type=volume",
+    "source=vscode-settings,target=/home/developer/.vscode-server/data/User,type=volume",
+    "source=bash-history,target=/home/developer/.bash_history,type=volume",
+    "source=ssh-keys,target=/home/developer/.ssh,type=volume"
+  ],
+
+  // Environment variables
+  "containerEnv": {
+    "WORKSPACE_FOLDER": "/workspace",
+    "NODE_ENV": "development",
+    "PYTHONPATH": "/workspace/src",
+    "GOPATH": "/workspace/go",
+    "CARGO_HOME": "/workspace/.cargo",
+    "JAVA_HOME": "/usr/lib/jvm/java-17-openjdk-amd64",
+    "DOCKER_HOST": "unix:///var/run/docker.sock"
+  },
+
+  // Override user ID and group ID
+  "runArgs": [
+    "--privileged",
+    "--network=fll-sim-network"
+  ],
+
+  // Features to install
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "developer",
+      "userUid": "1000",
+      "userGid": "1000"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": true,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "enableNonRootDocker": true,
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "20",
+      "nvmVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12",
+      "installTools": true,
+      "optimize": true
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.21"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "default"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installMaven": true,
+      "installGradle": true
+    }
+  }
+}

@@ -1,0 +1,115 @@
+# Development Container Docker Compose Extension
+# Extends the main development stack with VS Code specific services
+version: "3.8"
+
+services:
+  vscode-dev:
+    build:
+      context: .
+      dockerfile: docker/dev-vscode.Dockerfile
+    container_name: fll-sim-vscode-dev
+    privileged: true
+    volumes:
+      - ../:/workspace:cached
+      - vscode-extensions:/home/developer/.vscode-server/extensions
+      - vscode-settings:/home/developer/.vscode-server/data/User
+      - bash-history:/home/developer/.bash_history
+      - ssh-keys:/home/developer/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WORKSPACE_FOLDER=/workspace
+      - NODE_ENV=development
+      - PYTHONPATH=/workspace/src
+      - GOPATH=/workspace/go
+      - CARGO_HOME=/workspace/.cargo
+      - JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      - fll-sim-network
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+      mysql-dev:
+        condition: service_healthy
+      redis-dev:
+        condition: service_healthy
+      mongodb-dev:
+        condition: service_healthy
+    ports:
+      - "3000:3000" # Frontend dev server
+      - "3001:3001" # Alternative frontend
+      - "5000:5000" # Backend API
+      - "8080:8080" # Alternative backend
+    command: sleep infinity
+    restart: unless-stopped
+
+  # Code quality service
+  code-quality:
+    build:
+      context: .
+      dockerfile: docker/dev-tools.Dockerfile
+    container_name: fll-sim-code-quality
+    volumes:
+      - ../:/workspace:ro
+      - quality-reports:/tools/reports
+    environment:
+      - WORKSPACE_FOLDER=/workspace
+    networks:
+      - fll-sim-network
+    command: sleep infinity
+    restart: unless-stopped
+
+  # Testing service
+  testing:
+    build:
+      context: .
+      dockerfile: docker/dev-testing.Dockerfile
+    container_name: fll-sim-testing
+    volumes:
+      - ../:/workspace:ro
+      - test-reports:/testing/reports
+      - test-coverage:/testing/coverage
+      - test-screenshots:/testing/screenshots
+      - test-videos:/testing/videos
+    environment:
+      - WORKSPACE_FOLDER=/workspace
+      - DISPLAY=:99
+      - CHROME_BIN=/usr/bin/google-chrome
+      - FIREFOX_BIN=/usr/bin/firefox
+    networks:
+      - fll-sim-network
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+      mysql-dev:
+        condition: service_healthy
+      redis-dev:
+        condition: service_healthy
+      mongodb-dev:
+        condition: service_healthy
+    command: /testing/scripts/start-xvfb.sh sleep infinity
+    restart: unless-stopped
+
+volumes:
+  vscode-extensions:
+    name: fll-sim-vscode-extensions
+  vscode-settings:
+    name: fll-sim-vscode-settings
+  bash-history:
+    name: fll-sim-bash-history
+  ssh-keys:
+    name: fll-sim-ssh-keys
+  quality-reports:
+    name: fll-sim-quality-reports
+  test-reports:
+    name: fll-sim-test-reports
+  test-coverage:
+    name: fll-sim-test-coverage
+  test-screenshots:
+    name: fll-sim-test-screenshots
+  test-videos:
+    name: fll-sim-test-videos
+
+networks:
+  fll-sim-network:
+    external: true
