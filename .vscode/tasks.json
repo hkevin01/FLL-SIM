@@ -142,6 +142,19 @@
 				"up",
 				"gui"
 			]
+		},
+		{
+			"label": "Docker: Build GUI Container",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-f",
+				"docker/docker-compose.yml",
+				"build",
+				"gui"
+			],
+			"group": "build"
 		}
 	]
 }

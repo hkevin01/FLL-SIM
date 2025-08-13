@@ -91,12 +91,3 @@ class BackupManagerWidget(QWidget):
                 "No Selection",
                 "Please select a backup to restore."
             )
-                    "Restore Error",
-                    str(e)
-                )
-        else:
-            QMessageBox.warning(
-                self,
-                "No Selection",
-                "Please select a backup to restore."
-            )

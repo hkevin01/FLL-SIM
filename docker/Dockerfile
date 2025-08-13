@@ -30,15 +30,27 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libxcb-xinerama0 libxkbcommon-x11-0 libgl1 libglib2.0-0 libx11-xcb1 \
     libxkbcommon0 libdbus-1-3 libxrender1 libxi6 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxrandr2 \
     libatk1.0-0 libatk-bridge2.0-0 libpango-1.0-0 libfontconfig1 libfreetype6 libx11-6 \
+    libegl1 libgles2 libopengl0 libglx0 libgl1-mesa-dev libegl1-mesa-dev \
+    libgles-dev libglvnd-dev libglx-dev libopengl-dev \
+    x11proto-dev libx11-dev libxcb1-dev \
+    libegl1-mesa-dev libgl1-mesa-dev \
     fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for headless OpenGL/EGL
+ENV DISPLAY=:99 \
+    QT_GRAPHICSSYSTEM=software \
+    QT_QPA_PLATFORM=offscreen \
+    LIBGL_ALWAYS_INDIRECT=1 \
+    MESA_GL_VERSION_OVERRIDE=3.3
 
 # Copy lock / requirements first for caching
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Install package in editable mode (source copied later for dev caching)
+# Install package in editable mode - copy source files first
 COPY pyproject.toml setup.py README.md ./
+COPY src/ ./src/
 RUN pip install -e . || true
 
 # ---- Runtime stage ----
@@ -47,16 +59,20 @@ FROM base AS runtime
 # Add non-root user
 ARG APP_USER=fllsim
 RUN useradd -m -u 1000 -s /bin/bash ${APP_USER}
-USER ${APP_USER}
 
 WORKDIR /app
 
 # Copy source (after dependency layers cached)
 COPY --chown=${APP_USER}:${APP_USER} . .
 
+# Copy entrypoint with correct permissions for non-root user
+COPY --chown=${APP_USER}:${APP_USER} --chmod=755 docker/entrypoint.sh /app/docker/entrypoint.sh
+
+USER ${APP_USER}
+
 # Default to headless tests (override with command / env)
-ENTRYPOINT ["/app/docker/entrypoint.sh"]
-CMD ["fll-sim", "--headless", "--exit-after", "5"]
+ENTRYPOINT ["/bin/bash", "/app/docker/entrypoint.sh"]
+CMD ["python", "-m", "fll_sim.cli", "--headless", "--exit-after", "5"]
 
 # Provide a healthcheck (basic python import)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD python -c "import fll_sim" || exit 1
