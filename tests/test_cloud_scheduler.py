@@ -3,11 +3,13 @@ Cloud Sync Automation Test Suite
 
 Automated tests for CloudSyncScheduler and cloud sync automation in FLL-Sim.
 """
-import unittest
 import time
+import unittest
 from unittest.mock import MagicMock
-from src.fll_sim.cloud.scheduler import CloudSyncScheduler
-from src.fll_sim.cloud.status_reporter import CloudSyncStatusReporter
+
+from fll_sim.cloud.scheduler import CloudSyncScheduler
+from fll_sim.cloud.status_reporter import CloudSyncStatusReporter
+
 
 class DummySyncManager:
     def __init__(self):
@@ -56,5 +58,7 @@ class TestCloudSyncStatusReporter(unittest.TestCase):
         self.assertEqual(history[0]["item"], "profile1")
         self.assertEqual(history[1]["item"], "profile2")
 
+if __name__ == "__main__":
+    unittest.main()
 if __name__ == "__main__":
     unittest.main()

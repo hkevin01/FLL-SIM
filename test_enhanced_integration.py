@@ -13,11 +13,11 @@ from pathlib import Path
 
 import yaml
 
-from src.fll_sim.config.enhanced_config_manager import TypeSafeConfigLoader
-from src.fll_sim.core.state_management import SimulationState
-from src.fll_sim.enhanced_integration import EnhancedFLLSimulator
-from src.fll_sim.plugins.plugin_system import PluginManager
-from src.fll_sim.utils.enhanced_errors import ErrorContext, SimulationError
+from fll_sim.config.enhanced_config_manager import TypeSafeConfigLoader
+from fll_sim.core.state_management import SimulationState
+from fll_sim.enhanced_integration import EnhancedFLLSimulator
+from fll_sim.plugins.plugin_system import PluginManager
+from fll_sim.utils.enhanced_errors import ErrorContext, SimulationError
 
 
 def test_enhanced_systems_integration():
@@ -190,7 +190,7 @@ def test_error_recovery():
     """Test error recovery mechanisms."""
     print("\nTesting error recovery...")
 
-    from src.fll_sim.utils.enhanced_errors import ErrorRecoveryManager
+    from fll_sim.utils.enhanced_errors import ErrorRecoveryManager
 
     recovery_manager = ErrorRecoveryManager()
 

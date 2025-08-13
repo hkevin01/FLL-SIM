@@ -40,5 +40,3 @@ class CloudSyncScheduler:
             except Exception as e:
                 self.logger.error(f"Cloud sync error: {e}")
             time.sleep(self.interval)
-                self.logger.error(f"Cloud sync error: {e}")
-            time.sleep(self.interval)

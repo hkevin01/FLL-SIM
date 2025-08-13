@@ -3,10 +3,12 @@ Test Cloud Utility Module
 
 Unit tests for CloudUtils backup, restore, and list_backups functions.
 """
-import unittest
 import os
 import shutil
-from src.fll_sim.utils.cloud_utils import CloudUtils
+import unittest
+
+from fll_sim.utils.cloud_utils import CloudUtils
+
 
 class TestCloudUtils(unittest.TestCase):
     def setUp(self):
@@ -34,5 +36,7 @@ class TestCloudUtils(unittest.TestCase):
         backups = self.utils.list_backups(self.backup_dir)
         self.assertIn(os.path.basename(self.test_dir), backups)
 
+if __name__ == "__main__":
+    unittest.main()
 if __name__ == "__main__":
     unittest.main()

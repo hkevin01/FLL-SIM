@@ -172,6 +172,7 @@ class FLLSimMainWindow(QMainWindow):
             /* Main Window - Light theme following Windows 11 */
             QMainWindow { background-color: #F3F3F3; color: #323130; font-family: 'Segoe UI', sans-serif; font-size: 9pt; }
             QTabWidget::pane { border: none; background-color: #FFFFFF; border-radius: 8px; margin-top: 0px; }
+            /* Tab bar alignment is supported in Qt style sheets */
             QTabWidget::tab-bar { alignment: left; }
             QTabBar { background-color: transparent; border: none; }
             QTabBar::tab { background-color: transparent; color: #605E5C; padding: 12px 24px; margin-right: 4px; border: none; border-radius: 6px 6px 0 0; min-width: 80px; font-weight: 400; }
@@ -189,7 +190,7 @@ class FLLSimMainWindow(QMainWindow):
                 min-height: 32px;
                 min-width: 100px;
                 text-align: center;
-                qproperty-alignment: AlignCenter;
+                /* Removed invalid qproperty-alignment */
             }
             QPushButton:hover { background-color: #106EBE; border-color: #106EBE; }
             QPushButton:pressed { background-color: #005A9E; border-color: #005A9E; }

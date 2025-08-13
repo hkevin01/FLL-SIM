@@ -34,5 +34,3 @@ class CloudSyncStatusReporter:
         except Exception as e:
             self.logger.error(f"Status report error: {e}")
             raise FLLSimError(f"Status report error: {e}") from e
-            self.logger.error(f"Status report error: {e}")
-            raise FLLSimError(f"Status report error: {e}") from e

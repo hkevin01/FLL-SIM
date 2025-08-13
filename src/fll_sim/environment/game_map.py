@@ -9,15 +9,13 @@ mission integration and FLL-specific features.
 import heapq
 import json
 import math
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import pygame
 import pymunk
-import yaml
 
-from .mission import FLLMissionFactory, Mission, MissionManager, MissionStatus
+from .mission import Mission, MissionManager
 
 
 @dataclass
@@ -224,36 +222,11 @@ class GameMap:
             self.obstacles.append(border)
 
     def _setup_sample_missions(self):
-        """Setup sample missions for demonstration."""
-        from .mission import Mission, MissionType
-
-        # Mission 1: Visit red zone
-        mission1 = Mission(
-            name="Visit Red Zone",
-            description="Drive to and stop in the red zone",
-            mission_type=MissionType.AREA_VISIT,
-            target_area=(-600, -300, 300, 200),  # x, y, width, height
-            points=20,
-            time_limit=30.0
-        )
-
-        # Mission 2: Push object
-        mission2 = Mission(
-            name="Move Center Block",
-            description="Push the center block to the blue zone",
-            mission_type=MissionType.OBJECT_TRANSPORT,
-            target_object="Center Block",
-            target_area=(600, -300, 300, 200),
-            points=40,
-            time_limit=60.0
-        )
-
-        # Note: Mission system needs integration with mission_manager
-        # self.add_mission(mission1)
-        # self.add_mission(mission2)
-
-        # For now, we'll skip adding sample missions to avoid errors
-        print("Sample missions skipped - mission system needs integration")
+        """Setup sample missions for demonstration (disabled)."""
+        # Sample missions used a legacy Mission API and are disabled to
+        # avoid conflicts with the unified mission system. Use the
+        # season loader instead via load_fll_season_map.
+        return None
 
     def load_fll_season_map(self, season: str = "2024-SUBMERGED") -> None:
         """
@@ -438,6 +411,16 @@ class GameMap:
     def add_color_zone(self, zone: ColorZone) -> None:
         """Add a color zone to the map."""
         self.color_zones.append(zone)
+
+    def add_mission(self, mission: Mission) -> None:
+        """
+        Add a mission to the map via the mission manager and refresh
+        overlays.
+        """
+        self.mission_manager.add_mission(mission)
+        # Rebuild overlays to include areas derived from mission conditions
+        self.mission_areas.clear()
+        self._create_mission_overlays()
 
     def get_color_at_position(self, x: float, y: float) -> Optional[str]:
         """

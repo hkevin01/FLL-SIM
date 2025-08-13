@@ -32,7 +32,7 @@ class MyTutorial:
 - Add tests to `tests/test_education_modules.py`:
 ```python
 import unittest
-from src.fll_sim.education.my_tutorial import MyTutorial
+from fll_sim.education.my_tutorial import MyTutorial
 class TestMyTutorial(unittest.TestCase):
     def test_run(self):
         tutorial = MyTutorial(["Step 1", "Step 2"])

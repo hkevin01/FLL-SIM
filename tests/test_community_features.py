@@ -4,10 +4,9 @@ Test Community Features
 Unit and integration tests for CommunityManager and shared content features.
 """
 import unittest
-from src.fll_sim.education.community_features import (
-    CommunityManager,
-    SharedContent
-)
+
+from fll_sim.education.community_features import (CommunityManager,
+                                                  SharedContent)
 
 
 class TestCommunityManager(unittest.TestCase):
