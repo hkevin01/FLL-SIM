@@ -4,7 +4,8 @@ Onboarding Wizard Module
 Provides onboarding workflows for new users and educators in FLL-Sim.
 """
 
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
+
 
 class OnboardingWizard:
     """Manages onboarding workflows for new users and educators."""
@@ -51,4 +52,5 @@ class OnboardingWizard:
         """Resets the onboarding process to the initial state."""
         self.current_step = 0
         self.logger.info("Onboarding reset.")
+        return self.steps[self.current_step]
         return self.steps[self.current_step]

@@ -39,10 +39,13 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 
 # Set environment variables for headless OpenGL/EGL
 ENV DISPLAY=:99 \
-    QT_GRAPHICSSYSTEM=software \
     QT_QPA_PLATFORM=offscreen \
+    QT_GRAPHICSSYSTEM=software \
     LIBGL_ALWAYS_INDIRECT=1 \
-    MESA_GL_VERSION_OVERRIDE=3.3
+    LIBGL_ALWAYS_SOFTWARE=1 \
+    MESA_GL_VERSION_OVERRIDE=3.3 \
+    MESA_GLSL_VERSION_OVERRIDE=330 \
+    FLL_SIM_HEADLESS=1
 
 # Copy lock / requirements first for caching
 COPY requirements.txt ./

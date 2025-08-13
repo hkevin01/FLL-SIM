@@ -11,17 +11,13 @@ This script demonstrates the complete FLL-Sim system with:
 """
 
 import argparse
-import os
 import sys
 
 import pygame
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-
 from fll_sim.core.simulator import SimulationConfig, Simulator
 from fll_sim.environment.game_map import GameMap, MapConfig
-from fll_sim.environment.mission import FLLMissionFactory, MissionManager
+from fll_sim.environment.mission import MissionManager, MissionStatus
 from fll_sim.robot.pybricks_api import (FLLMissions, PybricksConfig,
                                         PybricksRobot)
 from fll_sim.robot.robot import Robot, RobotConfig
@@ -49,28 +45,8 @@ def create_demo_map() -> GameMap:
     config = MapConfig(width=2400, height=1800)
     game_map = GameMap(config)
 
-    # Load 2024 SUBMERGED season missions
-    mission_factory = FLLMissionFactory()
-    missions = [
-        mission_factory.create_coral_nursery(),
-        mission_factory.create_shark_delivery(),
-        mission_factory.create_research_vessel(),
-        mission_factory.create_whale_migration(),
-        mission_factory.create_submarine_voyage()
-    ]
-
-    # Add missions to map
-    for mission in missions:
-        game_map.add_mission(mission)
-
-    # Add some obstacles
-    game_map.add_obstacle("wall_north", 0, 0, 2400, 50)
-    game_map.add_obstacle("wall_south", 0, 1750, 2400, 50)
-    game_map.add_obstacle("wall_west", 0, 0, 50, 1800)
-    game_map.add_obstacle("wall_east", 2350, 0, 50, 1800)
-
-    # Add central research station
-    game_map.add_obstacle("research_station", 1100, 800, 200, 200)
+    # Load FLL 2024 SUBMERGED season layout and missions
+    game_map.load_fll_season_map("2024-SUBMERGED")
 
     return game_map
 
@@ -84,7 +60,7 @@ def demo_basic_movement(robot: Robot):
     robot.turn_right(90, 30)     # Turn right 90 degrees
     robot.move_forward(150, 40)  # Forward 150mm
     robot.turn_left(45, 30)      # Turn left 45 degrees
-    robot.move_backward(100, 30) # Backward 100mm
+    robot.move_backward(100, 30)  # Backward 100mm
     robot.wait(1.0)              # Wait 1 second
 
 
@@ -120,33 +96,60 @@ def demo_mission_system(mission_manager: MissionManager, robot: Robot):
     """Demonstrate mission system with scoring."""
     print("Demo: Mission System")
 
-    # Start a mission session
-    mission_manager.start_session("Demo Session")
-
-    # Simulate mission completion
-    missions = mission_manager.get_available_missions()
-    if missions:
-        mission = missions[0]
+    # Pick an available mission and start it
+    available = mission_manager.get_available_missions()
+    if not available:
+        print("No missions available to start.")
+    else:
+        mission = available[0]
         print(f"Starting mission: {mission.name}")
+        if mission_manager.start_mission(mission.mission_id):
+            # Simulate environment/robot state to satisfy a simple mission
+            # For Coral Nursery, place coral_sample at target area.
+            env_state = {
+                'objects': {
+                    'coral_sample': {'x': 1800, 'y': 900}
+                }
+            }
+            robot_state = {
+                'position': {'x': robot.x, 'y': robot.y, 'angle': robot.angle},
+                'sensors': {},
+                'speed': 0.0,
+                'energy_used': 0.0,
+            }
 
-        # Simulate robot reaching mission area
-        robot.x = mission.area.x
-        robot.y = mission.area.y
+            # Allow duration-based conditions to be satisfied
+            import time as _time
+            start = _time.time()
+            while (
+                _time.time() - start < 2.2
+                and mission_manager.active_mission
+                and mission_manager.active_mission.status
+                == MissionStatus.IN_PROGRESS
+            ):
+                mission_manager.update_active_mission(
+                    robot_state, env_state
+                )
+                _time.sleep(0.2)
 
-        # Complete the mission
-        result = mission_manager.complete_mission(mission.id, success=True)
-        print(f"Mission completed! Score: {result.points_awarded}")
+            # Print mission outcome
+            am = mission_manager.active_mission
+            if am and am.status == MissionStatus.COMPLETED:
+                print(f"Mission completed! Score: {am.score}")
+            else:
+                print("Mission did not complete within demo timeframe.")
 
     # Get session summary
     summary = mission_manager.get_session_summary()
     print("Session Summary:")
     print(f"  Total Score: {summary['total_score']}")
-    print(f"  Missions Completed: {summary['missions_completed']}")
-    print(f"  Time Remaining: {summary['time_remaining']:.1f}s")
+    print(f"  Missions Completed: {summary['completed_missions']}")
+    total = summary.get('total_missions', 0)
+    print(f"  Total Missions: {total}")
 
 
 def demo_ai_pathfinding(robot: Robot, game_map: GameMap):
-    """Demonstrate AI-driven pathfinding (placeholder for future implementation)."""
+    """Demonstrate AI-driven pathfinding (placeholder)."""
     print("Demo: AI Pathfinding (Placeholder)")
 
     # This would integrate with actual AI pathfinding algorithms
@@ -184,8 +187,8 @@ def run_simulation_demo(headless: bool = False):
     robot = create_demo_robot()
     game_map = create_demo_map()
 
-    # Create mission manager
-    mission_manager = MissionManager(game_map.missions)
+    # Use the map's mission manager
+    mission_manager = game_map.mission_manager
 
     # Create Pybricks-style robot for high-level API demo
     pybricks_config = PybricksConfig(
@@ -226,7 +229,8 @@ def run_simulation_demo(headless: bool = False):
 
     # Add mission callbacks
     def on_mission_complete(mission_id: str, success: bool):
-        print(f"Mission {mission_id} completed: {'Success' if success else 'Failed'}")
+        status = 'Success' if success else 'Failed'
+        print(f"Mission {mission_id} completed: {status}")
 
     simulator.add_mission_callback(on_mission_complete)
 
@@ -255,7 +259,6 @@ def run_simulation_demo(headless: bool = False):
                 demo_ai_pathfinding(robot, game_map)
 
     # Add custom event handler
-    original_handle_events = simulator._handle_events
     def enhanced_handle_events():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -264,7 +267,8 @@ def run_simulation_demo(headless: bool = False):
                 if event.key in simulator.key_handlers:
                     simulator.key_handlers[event.key]()
                 else:
-                    handle_demo_keys(pygame.event.Event(pygame.KEYDOWN, key=event.key))
+                    evt = pygame.event.Event(pygame.KEYDOWN, key=event.key)
+                    handle_demo_keys(evt)
                     robot.handle_key_event(event)
             elif event.type == pygame.KEYUP:
                 robot.handle_key_event(event)
@@ -282,16 +286,31 @@ def run_simulation_demo(headless: bool = False):
 
 def main():
     """Main entry point with command line argument parsing."""
-    parser = argparse.ArgumentParser(description="FLL-Sim - First Lego League Simulator")
-    parser.add_argument("--headless", action="store_true",
-                       help="Run simulation without graphics (for testing)")
-    parser.add_argument("--demo", choices=["basic", "pybricks", "missions", "ai"],
-                       help="Run specific demo")
-    parser.add_argument("--gui", action="store_true",
-                       help="Launch the GUI interface")
+    parser = argparse.ArgumentParser(
+        description="FLL-Sim - First Lego League Simulator"
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run simulation without graphics (for testing)",
+    )
+    parser.add_argument(
+        "--demo",
+        choices=["basic", "pybricks", "missions", "ai"],
+        help="Run specific demo",
+    )
+    parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="Launch the GUI interface",
+    )
     parser.add_argument("--config", type=str, help="Load configuration file")
-    parser.add_argument("--season", type=str, default="2024",
-                       help="FLL season year (default: 2024)")
+    parser.add_argument(
+        "--season",
+        type=str,
+        default="2024",
+        help="FLL season year (default: 2024)",
+    )
 
     args = parser.parse_args()
 
@@ -317,7 +336,7 @@ def main():
             elif args.demo == "missions":
                 robot = create_demo_robot()
                 game_map = create_demo_map()
-                mission_manager = MissionManager(game_map.missions)
+                mission_manager = game_map.mission_manager
                 demo_mission_system(mission_manager, robot)
             elif args.demo == "ai":
                 robot = create_demo_robot()

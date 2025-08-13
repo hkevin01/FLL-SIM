@@ -1,10 +1,12 @@
 """
 Test suite for CloudAutoBackup module
 """
-import unittest
 import time
+import unittest
 from unittest.mock import MagicMock
-from src.fll_sim.cloud.cloud_auto_backup import CloudAutoBackup
+
+from fll_sim.cloud.cloud_auto_backup import CloudAutoBackup
+
 
 class TestCloudAutoBackup(unittest.TestCase):
     def setUp(self):
@@ -39,5 +41,7 @@ class TestCloudAutoBackup(unittest.TestCase):
         # Check that logger.error was called
         self.assertTrue(any("Backup error" in str(call) for call in self.backup.logger.error.call_args_list))
 
+if __name__ == "__main__":
+    unittest.main()
 if __name__ == "__main__":
     unittest.main()

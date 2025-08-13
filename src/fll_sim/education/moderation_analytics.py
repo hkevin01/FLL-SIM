@@ -4,9 +4,11 @@ Community Moderation & Analytics Module
 Provides tools for community content submission, moderation, automated validation, and analytics dashboard for FLL-Sim.
 """
 
-from typing import Dict, Any, List
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+from typing import Any, Dict, List
+
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class ModerationManager:
     """Manages community content moderation and validation."""
@@ -63,5 +65,7 @@ class ModerationAnalytics:
         except Exception as e:
             self.logger.error(f"Error logging moderation event: {e}")
 
+    def get_event_history(self):
+        return self.moderation_events
     def get_event_history(self):
         return self.moderation_events

@@ -155,6 +155,41 @@
 				"gui"
 			],
 			"group": "build"
+		},
+		{
+			"label": "FLL-Sim (venv): Install Dependencies",
+			"type": "shell",
+			"command": "./fll-sim-env/bin/pip",
+			"args": [
+				"install",
+				"-r",
+				"requirements.txt"
+			],
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "FLL-Sim (venv): Install Package (editable)",
+			"type": "shell",
+			"command": "./fll-sim-env/bin/pip",
+			"args": [
+				"install",
+				"-e",
+				"."
+			],
+			"group": "build"
+		},
+		{
+			"label": "FLL-Sim (venv): Run Headless",
+			"type": "shell",
+			"command": "./fll-sim-env/bin/python",
+			"args": [
+				"main.py",
+				"--headless"
+			],
+			"group": "test"
 		}
 	]
 }

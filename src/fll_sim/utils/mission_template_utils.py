@@ -4,8 +4,10 @@ Mission Template Utility Module
 Provides helper functions for creating, loading, and validating mission templates in FLL-Sim.
 """
 import json
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class MissionTemplateUtils:
     """Utility functions for mission template management."""
@@ -52,5 +54,7 @@ class TemplateManager:
         self.templates[name] = template
     def get_template(self, name: str) -> dict:
         return self.templates.get(name, {})
+    def list_templates(self) -> list:
+        return list(self.templates.keys())
     def list_templates(self) -> list:
         return list(self.templates.keys())

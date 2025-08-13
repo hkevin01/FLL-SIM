@@ -59,12 +59,3 @@ class ModerationDashboardWidget(QWidget):
     def _update_analytics(self):
         stats = self.analytics.get_stats()
         self.analytics_label.setText(str(stats))
-    def _reject(self):
-        idx = self.submissions_list.currentRow()
-        if idx >= 0:
-            self.manager.moderate_content(idx, False)
-            self._update_submissions()
-
-    def _update_analytics(self):
-        stats = self.analytics.get_stats()
-        self.analytics_label.setText(str(stats))

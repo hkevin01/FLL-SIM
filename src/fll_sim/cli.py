@@ -58,7 +58,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     except Exception:
         __version__ = "0.0.0-dev"
     print(f"FLL-Sim v{__version__} – profile={args.profile} season={args.season} headless={bool(args.headless)}")
-    from main import run_simulation_demo  # noqa: E402
+    # Import the main simulation function
+    old_path = sys.path.copy()
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+    try:
+        from main import run_simulation_demo  # noqa: E402
+    finally:
+        sys.path[:] = old_path
     if args.demo:
         print(f"Running demo: {args.demo}")
     run_simulation_demo(headless=bool(args.headless))

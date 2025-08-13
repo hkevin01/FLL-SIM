@@ -8,16 +8,15 @@ management, error handling, plugin architecture, and state management systems.
 import os
 from typing import Any, Dict, Optional
 
-from src.fll_sim.config.enhanced_config_manager import (ConfigProfileManager,
-                                                        ConfigValidator,
-                                                        TypeSafeConfigLoader)
-from src.fll_sim.core.state_management import SimulationStateManager
-from src.fll_sim.plugins.plugin_system import PluginManager
-from src.fll_sim.utils.enhanced_errors import (ConfigurationError,
-                                               ErrorContext,
-                                               ErrorRecoveryManager,
-                                               SimulationError)
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.config.enhanced_config_manager import (ConfigProfileManager,
+                                                    ConfigValidator,
+                                                    TypeSafeConfigLoader)
+from fll_sim.core.state_management import SimulationStateManager
+from fll_sim.plugins.plugin_system import PluginManager
+from fll_sim.utils.enhanced_errors import (ConfigurationError, ErrorContext,
+                                           ErrorRecoveryManager,
+                                           SimulationError)
+from fll_sim.utils.logger import FLLLogger
 
 
 class EnhancedFLLSimulator:
@@ -478,11 +477,6 @@ class SimulatorIntegration:
         """Get migration guide for existing code."""
         return {
             'configuration': 'Replace direct config loading with TypeSafeConfigLoader',
-            'error_handling': 'Use ErrorContext for error-prone operations',
-            'plugins': 'Register custom components as plugins',
-            'state_management': 'Use SimulationStateManager for lifecycle management',
-            'initialization': 'Use enhanced initialization with validation'
-        }
             'error_handling': 'Use ErrorContext for error-prone operations',
             'plugins': 'Register custom components as plugins',
             'state_management': 'Use SimulationStateManager for lifecycle management',

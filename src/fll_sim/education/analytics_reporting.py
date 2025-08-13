@@ -4,9 +4,10 @@ Analytics & Reporting Module
 Provides mission and robot performance analytics, automated report generation, and visualization of user progress for FLL-Sim.
 """
 
-from typing import Dict, Any
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+from typing import Any, Dict
+
+from fll_sim.utils.logger import FLLLogger
+
 
 class AnalyticsManager:
     """Manages analytics and reporting for missions and robots."""
@@ -68,5 +69,7 @@ class AnalyticsReporter:
             self.logger.info("Generating analytics report.")
             return self.analytics_data
         except Exception as e:
+            self.logger.error(f"Error generating report: {e}")
+            return []
             self.logger.error(f"Error generating report: {e}")
             return []
