@@ -4,8 +4,10 @@ User Profile Utility Module
 Provides helper functions for user profile management, validation, and sync in FLL-Sim.
 """
 import json
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class UserProfileUtils:
     """Utility functions for user profile management."""
@@ -37,5 +39,7 @@ class UserProfileUtils:
             self.logger.info(f"Profile validation: {valid}")
             return valid
         except Exception as e:
+            self.logger.error(f"Validate profile error: {e}")
+            raise FLLSimError(f"Validate profile error: {e}") from e
             self.logger.error(f"Validate profile error: {e}")
             raise FLLSimError(f"Validate profile error: {e}") from e

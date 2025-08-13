@@ -3,7 +3,8 @@ Adaptive Learning Module
 
 Provides adaptive learning paths, progress tracking, and personalized recommendations for FLL-Sim.
 """
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
+
 
 class AdaptiveLearningManager:
     """Manages adaptive learning paths and user progress."""
@@ -26,4 +27,5 @@ class AdaptiveLearningManager:
         return "Next recommended step"
 
     def get_progress(self, user_id):
+        return self.progress.get(user_id, {})
         return self.progress.get(user_id, {})

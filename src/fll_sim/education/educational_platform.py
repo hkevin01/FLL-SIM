@@ -9,13 +9,13 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from src.fll_sim.education.interactive_tutorial_system import \
+from fll_sim.education.interactive_tutorial_system import \
     InteractiveTutorialSystem
-from src.fll_sim.education.mission_builder import MissionBuilder
-from src.fll_sim.education.student_tracking import StudentTrackingSystem
-from src.fll_sim.education.visual_programming import VisualProgrammingInterface
-from src.fll_sim.utils.docker_strategy import UniversalDockerStrategy
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.education.mission_builder import MissionBuilder
+from fll_sim.education.student_tracking import StudentTrackingSystem
+from fll_sim.education.visual_programming import VisualProgrammingInterface
+from fll_sim.utils.docker_strategy import UniversalDockerStrategy
+from fll_sim.utils.logger import FLLLogger
 
 
 class EducationalPlatform:

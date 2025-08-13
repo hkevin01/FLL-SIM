@@ -4,7 +4,7 @@ Moderation Dashboard Module
 Provides tools for moderators to review analytics, manage users,
 and enforce community standards in FLL-Sim.
 """
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
 
 
 class ModerationDashboard:

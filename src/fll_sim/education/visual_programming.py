@@ -11,9 +11,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.fll_sim.education.interactive_tutorial_system import (
+from fll_sim.education.interactive_tutorial_system import (
     BlockType, InteractiveTutorialSystem, ProgrammingBlock)
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
 
 
 class BlockConnectionType(Enum):

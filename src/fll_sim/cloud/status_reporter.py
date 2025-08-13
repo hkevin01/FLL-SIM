@@ -3,9 +3,11 @@ Cloud Sync Status Reporter Module
 
 Provides reporting and logging for cloud sync status and history in FLL-Sim.
 """
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
 import datetime
+
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class CloudSyncStatusReporter:
     """Reports and logs cloud sync status and history."""
@@ -30,5 +32,7 @@ class CloudSyncStatusReporter:
                 self.log_status(item, "synced")
             return self.history
         except Exception as e:
+            self.logger.error(f"Status report error: {e}")
+            raise FLLSimError(f"Status report error: {e}") from e
             self.logger.error(f"Status report error: {e}")
             raise FLLSimError(f"Status report error: {e}") from e

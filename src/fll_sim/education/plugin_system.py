@@ -1,24 +1,28 @@
 """
 Plugin System Module
 
-Provides a framework for loading, managing, and validating plugins for missions, robots, and educational modules in FLL-Sim.
+Provides a framework for loading, managing, and validating plugins for
+missions, robots, and educational modules.
 Designed for extensibility and community content ecosystem.
 """
 
-from typing import Dict, Any, List
-import os
 import json
+import os
+from typing import Any, Dict, List
+
 
 class PluginValidationError(Exception):
     """Custom exception for plugin validation errors."""
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
+
 
 class PluginManager:
     """Manages plugins for missions, robots, and educational modules."""
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.plugins: Dict[str, Any] = {}
-        from src.fll_sim.utils.logger import FLLLogger
+        from fll_sim.utils.logger import FLLLogger
         self.logger = FLLLogger('PluginManager')
 
     def load_plugin(self, plugin_id: str, plugin_data: dict) -> None:
@@ -51,14 +55,11 @@ class PluginManager:
 
     def load_marketplace_plugins(self, marketplace_dir: str) -> None:
         """Load plugins from a marketplace directory."""
-        import os
-        import json
         for filename in os.listdir(marketplace_dir):
             if filename.endswith('.json'):
                 plugin_id = filename[:-5]
-                with open(
-                    os.path.join(marketplace_dir, filename), 'r', encoding='utf-8'
-                ) as f:
+                plugin_path = os.path.join(marketplace_dir, filename)
+                with open(plugin_path, 'r', encoding='utf-8') as f:
                     plugin_data = json.load(f)
                 self.load_plugin(plugin_id, plugin_data)
         self.logger.info(f"Marketplace plugins loaded from {marketplace_dir}")

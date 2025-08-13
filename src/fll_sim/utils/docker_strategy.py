@@ -11,7 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
 
 
 class ProjectType(Enum):

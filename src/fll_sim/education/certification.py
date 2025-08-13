@@ -3,7 +3,8 @@ Certification Module
 
 Provides certification tracking and milestone management for FLL-Sim educational progress.
 """
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
+
 
 class CertificationManager:
     """Manages user certifications and milestones."""
@@ -19,4 +20,5 @@ class CertificationManager:
         return self.certifications.get(user_id, [])
 
     def has_certification(self, user_id, cert_name):
+        return cert_name in self.certifications.get(user_id, [])
         return cert_name in self.certifications.get(user_id, [])

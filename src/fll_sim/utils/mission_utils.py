@@ -3,8 +3,9 @@ Mission Utility Module
 
 Provides helper functions for mission creation, validation, and management in FLL-Sim.
 """
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class MissionUtils:
     """Utility functions for mission management."""
@@ -39,4 +40,5 @@ class MissionUtils:
             return data
         except Exception as e:
             self.logger.error(f"Load mission error: {e}")
+            raise FLLSimError(f"Load mission error: {e}") from e
             raise FLLSimError(f"Load mission error: {e}") from e

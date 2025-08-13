@@ -310,7 +310,7 @@ class EnhancedFLLSimulator:
         self.logger.debug("Robot initialization would happen here")
 
         # Example integration point:
-        # from src.fll_sim.robot.robot import Robot
+    # from fll_sim.robot.robot import Robot
         # self.robot = Robot(config)
 
     def _initialize_physics_engine(self, config: Dict[str, Any]):
@@ -318,7 +318,7 @@ class EnhancedFLLSimulator:
         self.logger.debug("Physics engine initialization would happen here")
 
         # Example integration point:
-        # from src.fll_sim.physics.engine import PhysicsEngine
+    # from fll_sim.physics.engine import PhysicsEngine
         # self.physics_engine = PhysicsEngine(config)
 
     def _initialize_sensors(self, configs: Dict[str, Any]):

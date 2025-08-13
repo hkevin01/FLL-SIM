@@ -3,7 +3,7 @@ Internationalization Module
 
 Handles language selection, translation, and localization for FLL-Sim users.
 """
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.logger import FLLLogger
 
 
 class InternationalizationManager:

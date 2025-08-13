@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from src.fll_sim.utils.enhanced_errors import ErrorSeverity, SimulationError
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.enhanced_errors import ErrorSeverity, SimulationError
+from fll_sim.utils.logger import FLLLogger
 
 
 class SimulationState(Enum):

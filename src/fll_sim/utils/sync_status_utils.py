@@ -3,8 +3,9 @@ Sync Status Utility Module
 
 Provides helper functions for tracking and reporting cloud sync status in FLL-Sim.
 """
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class SyncStatusUtils:
     """Utility functions for cloud sync status tracking."""
@@ -35,4 +36,5 @@ class SyncStatusUtils:
             return self.status.copy()
         except Exception as e:
             self.logger.error(f"All status error: {e}")
+            raise FLLSimError(f"All status error: {e}") from e
             raise FLLSimError(f"All status error: {e}") from e

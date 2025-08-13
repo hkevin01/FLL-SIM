@@ -11,8 +11,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from src.fll_sim.config.enhanced_config_manager import TypeSafeConfigLoader
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.config.enhanced_config_manager import TypeSafeConfigLoader
+from fll_sim.utils.logger import FLLLogger
 
 
 class TutorialLevel(Enum):

@@ -5,8 +5,10 @@ Provides helper functions for file operations, validation, and safe file handlin
 """
 import os
 import shutil
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+
+from fll_sim.utils.errors import FLLSimError
+from fll_sim.utils.logger import FLLLogger
+
 
 class FileUtils:
     """Utility functions for file operations and validation."""
@@ -39,5 +41,7 @@ class FileUtils:
             self.logger.info(f"File validation for {path}: {valid}")
             return valid
         except Exception as e:
+            self.logger.error(f"Validation error: {e}")
+            raise FLLSimError(f"Validation error: {e}") from e
             self.logger.error(f"Validation error: {e}")
             raise FLLSimError(f"Validation error: {e}") from e

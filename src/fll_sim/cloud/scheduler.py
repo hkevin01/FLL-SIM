@@ -5,8 +5,9 @@ Provides scheduling and automation for cloud sync operations in FLL-Sim.
 """
 import threading
 import time
-from src.fll_sim.utils.logger import FLLLogger
-from src.fll_sim.utils.errors import FLLSimError
+
+from fll_sim.utils.logger import FLLLogger
+
 
 class CloudSyncScheduler:
     """Schedules and automates cloud sync operations."""
@@ -37,5 +38,7 @@ class CloudSyncScheduler:
                 self.sync_manager.sync_profile("auto-scheduled-profile")
                 self.logger.info("Automated cloud sync completed.")
             except Exception as e:
+                self.logger.error(f"Cloud sync error: {e}")
+            time.sleep(self.interval)
                 self.logger.error(f"Cloud sync error: {e}")
             time.sleep(self.interval)

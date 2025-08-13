@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Type
 
-from src.fll_sim.utils.errors import PluginError
-from src.fll_sim.utils.logger import FLLLogger
+from fll_sim.utils.errors import PluginError
+from fll_sim.utils.logger import FLLLogger
 
 
 @dataclass
