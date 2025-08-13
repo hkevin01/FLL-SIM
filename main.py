@@ -13,7 +13,6 @@ This script demonstrates the complete FLL-Sim system with:
 import argparse
 import os
 import sys
-from typing import Optional
 
 import pygame
 
@@ -22,13 +21,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from fll_sim.core.simulator import SimulationConfig, Simulator
 from fll_sim.environment.game_map import GameMap, MapConfig
-from fll_sim.environment.mission import (
-    FLLMissionFactory,
-    MissionDifficulty,
-    MissionManager,
-    MissionType,
-)
-from fll_sim.robot.pybricks_api import FLLMissions, PybricksConfig, PybricksRobot
+from fll_sim.environment.mission import FLLMissionFactory, MissionManager
+from fll_sim.robot.pybricks_api import (FLLMissions, PybricksConfig,
+                                        PybricksRobot)
 from fll_sim.robot.robot import Robot, RobotConfig
 from fll_sim.sensors.color_sensor import Color
 
@@ -44,7 +39,7 @@ def create_demo_robot() -> Robot:
         max_angular_velocity=180.0,
         color=(255, 200, 0)  # Yellow robot
     )
-    
+
     return Robot(x=100, y=100, angle=0, config=config)
 
 
@@ -53,7 +48,7 @@ def create_demo_map() -> GameMap:
     # Create base map with custom size
     config = MapConfig(width=2400, height=1800)
     game_map = GameMap(config)
-    
+
     # Load 2024 SUBMERGED season missions
     mission_factory = FLLMissionFactory()
     missions = [
@@ -63,27 +58,27 @@ def create_demo_map() -> GameMap:
         mission_factory.create_whale_migration(),
         mission_factory.create_submarine_voyage()
     ]
-    
+
     # Add missions to map
     for mission in missions:
         game_map.add_mission(mission)
-    
+
     # Add some obstacles
     game_map.add_obstacle("wall_north", 0, 0, 2400, 50)
     game_map.add_obstacle("wall_south", 0, 1750, 2400, 50)
     game_map.add_obstacle("wall_west", 0, 0, 50, 1800)
     game_map.add_obstacle("wall_east", 2350, 0, 50, 1800)
-    
+
     # Add central research station
     game_map.add_obstacle("research_station", 1100, 800, 200, 200)
-    
+
     return game_map
 
 
 def demo_basic_movement(robot: Robot):
     """Demonstrate basic robot movement commands."""
     print("Demo: Basic Movement")
-    
+
     # Queue movement commands
     robot.move_forward(200, 50)  # Forward 200mm at 50% speed
     robot.turn_right(90, 30)     # Turn right 90 degrees
@@ -96,24 +91,24 @@ def demo_basic_movement(robot: Robot):
 def demo_pybricks_api(pybricks_robot: PybricksRobot):
     """Demonstrate Pybricks-style API usage."""
     print("Demo: Pybricks API")
-    
+
     # Configure movement settings
     pybricks_robot.drive_base.settings(
         straight_speed=200,
         turn_rate=100
     )
-    
+
     # Execute missions using familiar Pybricks commands
     FLLMissions.square_path(pybricks_robot, side_length=300, speed=150)
-    
+
     # Color-based navigation
     print("Searching for red line...")
     FLLMissions.follow_line_until_color(pybricks_robot, Color.RED, speed=100)
-    
+
     # Wall approach
     print("Approaching wall...")
     FLLMissions.navigate_to_wall(pybricks_robot, distance_mm=100, speed=80)
-    
+
     # Search pattern
     print("Executing search pattern...")
     found = FLLMissions.search_pattern(pybricks_robot, search_distance=400)
@@ -124,27 +119,27 @@ def demo_pybricks_api(pybricks_robot: PybricksRobot):
 def demo_mission_system(mission_manager: MissionManager, robot: Robot):
     """Demonstrate mission system with scoring."""
     print("Demo: Mission System")
-    
+
     # Start a mission session
     mission_manager.start_session("Demo Session")
-    
+
     # Simulate mission completion
     missions = mission_manager.get_available_missions()
     if missions:
         mission = missions[0]
         print(f"Starting mission: {mission.name}")
-        
+
         # Simulate robot reaching mission area
         robot.x = mission.area.x
         robot.y = mission.area.y
-        
+
         # Complete the mission
         result = mission_manager.complete_mission(mission.id, success=True)
         print(f"Mission completed! Score: {result.points_awarded}")
-    
+
     # Get session summary
     summary = mission_manager.get_session_summary()
-    print(f"Session Summary:")
+    print("Session Summary:")
     print(f"  Total Score: {summary['total_score']}")
     print(f"  Missions Completed: {summary['missions_completed']}")
     print(f"  Time Remaining: {summary['time_remaining']:.1f}s")
@@ -153,12 +148,12 @@ def demo_mission_system(mission_manager: MissionManager, robot: Robot):
 def demo_ai_pathfinding(robot: Robot, game_map: GameMap):
     """Demonstrate AI-driven pathfinding (placeholder for future implementation)."""
     print("Demo: AI Pathfinding (Placeholder)")
-    
+
     # This would integrate with actual AI pathfinding algorithms
     print("Planning optimal path to mission areas...")
     print("Avoiding obstacles using A* algorithm...")
     print("Optimizing for mission scoring efficiency...")
-    
+
     # Simple waypoint following example
     waypoints = [
         (300, 200),
@@ -166,16 +161,16 @@ def demo_ai_pathfinding(robot: Robot, game_map: GameMap):
         (900, 300),
         (1200, 600)
     ]
-    
+
     print(f"Following waypoint path: {waypoints}")
     for i, (x, y) in enumerate(waypoints):
         print(f"  Navigating to waypoint {i+1}: ({x}, {y})")
-        
+
         # Calculate distance and direction
         dx = x - robot.x
         dy = y - robot.y
         distance = (dx**2 + dy**2)**0.5
-        
+
         # Queue movement (simplified)
         robot.move_forward(distance, 40)
         robot.wait(0.5)
@@ -184,14 +179,14 @@ def demo_ai_pathfinding(robot: Robot, game_map: GameMap):
 def run_simulation_demo(headless: bool = False):
     """Run the complete simulation demo."""
     print("Starting FLL-Sim Demo...")
-    
+
     # Create components
     robot = create_demo_robot()
     game_map = create_demo_map()
-    
+
     # Create mission manager
     mission_manager = MissionManager(game_map.missions)
-    
+
     # Create Pybricks-style robot for high-level API demo
     pybricks_config = PybricksConfig(
         wheel_diameter=56,
@@ -200,7 +195,7 @@ def run_simulation_demo(headless: bool = False):
         straight_speed=200
     )
     pybricks_robot = PybricksRobot(pybricks_config)
-    
+
     # Configure simulation
     sim_config = SimulationConfig(
         window_width=1400,
@@ -209,32 +204,32 @@ def run_simulation_demo(headless: bool = False):
         real_time_factor=1.0,
         show_debug_info=True
     )
-    
+
     if headless:
         # Run without visualization for testing
         print("Running headless simulation...")
-        
+
         # Demo basic movement
         demo_basic_movement(robot)
-        
+
         # Demo mission system
         demo_mission_system(mission_manager, robot)
-        
+
         # Demo AI pathfinding
         demo_ai_pathfinding(robot, game_map)
-        
+
         print("Headless demo completed!")
         return
-    
+
     # Create and start simulator
     simulator = Simulator(robot, game_map, sim_config)
-    
+
     # Add mission callbacks
     def on_mission_complete(mission_id: str, success: bool):
         print(f"Mission {mission_id} completed: {'Success' if success else 'Failed'}")
-    
+
     simulator.add_mission_callback(on_mission_complete)
-    
+
     # Demo different robot control methods
     print("\nControls:")
     print("  Arrow Keys: Manual robot control")
@@ -246,7 +241,7 @@ def run_simulation_demo(headless: bool = False):
     print("  2: Demo Pybricks API")
     print("  3: Demo mission system")
     print("  4: Demo AI pathfinding")
-    
+
     # Enhanced input handling
     def handle_demo_keys(event):
         if event.type == pygame.KEYDOWN:
@@ -258,7 +253,7 @@ def run_simulation_demo(headless: bool = False):
                 demo_mission_system(mission_manager, robot)
             elif event.key == pygame.K_4:
                 demo_ai_pathfinding(robot, game_map)
-    
+
     # Add custom event handler
     original_handle_events = simulator._handle_events
     def enhanced_handle_events():
@@ -275,12 +270,12 @@ def run_simulation_demo(headless: bool = False):
                 robot.handle_key_event(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 simulator._handle_mouse_click(event)
-    
+
     simulator._handle_events = enhanced_handle_events
-    
+
     print("\nStarting interactive simulation...")
     print("Use the controls above to interact with the simulation.")
-    
+
     # Start simulation
     simulator.start()
 
@@ -288,18 +283,29 @@ def run_simulation_demo(headless: bool = False):
 def main():
     """Main entry point with command line argument parsing."""
     parser = argparse.ArgumentParser(description="FLL-Sim - First Lego League Simulator")
-    parser.add_argument("--headless", action="store_true", 
+    parser.add_argument("--headless", action="store_true",
                        help="Run simulation without graphics (for testing)")
     parser.add_argument("--demo", choices=["basic", "pybricks", "missions", "ai"],
                        help="Run specific demo")
+    parser.add_argument("--gui", action="store_true",
+                       help="Launch the GUI interface")
     parser.add_argument("--config", type=str, help="Load configuration file")
     parser.add_argument("--season", type=str, default="2024",
                        help="FLL season year (default: 2024)")
-    
+
     args = parser.parse_args()
-    
+
     try:
-        if args.demo:
+        if args.gui:
+            print("Launching FLL-Sim GUI...")
+            try:
+                from fll_sim.gui.main_gui import main as gui_main
+                return gui_main()
+            except ImportError as e:
+                print(f"GUI not available: {e}")
+                print("Make sure PyQt6 is installed: pip install PyQt6")
+                return 1
+        elif args.demo:
             print(f"Running {args.demo} demo...")
             # Run specific demo based on argument
             if args.demo == "basic":
@@ -320,7 +326,7 @@ def main():
         else:
             # Run full simulation
             run_simulation_demo(headless=args.headless)
-            
+
     except KeyboardInterrupt:
         print("\nSimulation interrupted by user.")
     except Exception as e:
@@ -328,7 +334,7 @@ def main():
         import traceback
         traceback.print_exc()
         return 1
-    
+
     return 0
 
 

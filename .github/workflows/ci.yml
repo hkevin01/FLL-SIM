@@ -1,33 +1,50 @@
-# FLL-Sim CI Configuration (Sample)
-
 name: CI
+
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build:
+  test:
+    name: Tests (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - name: Install dependencies
+          python-version: "3.12"
+      - name: Install system deps for Qt headless
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-glx libglib2.0-0 libxkbcommon0 libx11-xcb1 libxcb-render0 libxcb-shape0 libxcb-xfixes0
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Lint with flake8
+          pip install -e .
+      - name: Run unit tests (headless)
+        env:
+          FLL_SIM_HEADLESS: "1"
+          QT_QPA_PLATFORM: "offscreen"
         run: |
-          flake8 src/ tests/
-      - name: Run tests
+          xvfb-run -a python -m pytest -q
+      - name: CLI smoke test
+        env:
+          FLL_SIM_HEADLESS: "1"
+          QT_QPA_PLATFORM: "offscreen"
         run: |
-          pytest --cov=src
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: .coverage
+          python -c "import fll_sim, sys; print('version', getattr(fll_sim, '__version__', 'dev'))"
+          python -c "import fll_sim.cli as c; c.main(['--headless','--exit-after','1'])"
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t fll-sim -f docker/Dockerfile .
+      - name: Headless demo run
+        run: docker run --rm -e FLL_SIM_HEADLESS=1 fll-sim fll-sim --headless --exit-after 2

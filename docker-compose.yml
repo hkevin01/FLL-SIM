@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  sim-headless:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      - FLL_SIM_HEADLESS=1
+    command: ["python", "-m", "unittest", "-v", "tests"]
+
+  sim-gui:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      - FLL_SIM_HEADLESS=0
+      - QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-xcb}
+      - DISPLAY
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    command: ["fll-sim-gui", "--exit-after", "5"]
