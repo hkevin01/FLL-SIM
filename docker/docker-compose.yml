@@ -1,12 +1,26 @@
-version: '3.8'
 services:
-  fll-sim:
-    build: .
-    container_name: fll-sim-cloud
-    ports:
-      - "8080:8080"
-    volumes:
-      - ../:/app
+  gui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: fll-sim-gui
     environment:
       - PYTHONUNBUFFERED=1
-    command: python main.py
+      - DISPLAY=${DISPLAY}
+      - PYTHONPATH=/app/src
+    volumes:
+      - ../:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    command: fll-sim-gui
+  headless:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: fll-sim-headless
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLL_SIM_HEADLESS=1
+      - PYTHONPATH=/app/src
+    volumes:
+      - ../:/app
+    command: fll-sim --headless --exit-after 5

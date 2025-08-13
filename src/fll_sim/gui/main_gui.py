@@ -15,31 +15,13 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QFont, QIcon, QKeySequence, QShortcut
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QComboBox,
-    QDialogButtonBox,
-    QFileDialog,
-    QFormLayout,
-    QGridLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QMainWindow,
-    QMessageBox,
-    QProgressBar,
-    QPushButton,
-    QSpinBox,
-    QStatusBar,
-    QTabWidget,
-    QTextEdit,
-    QToolBar,
-    QTreeWidget,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox,
+                             QDialogButtonBox, QFileDialog, QFormLayout,
+                             QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+                             QListWidget, QMainWindow, QMessageBox,
+                             QProgressBar, QPushButton, QSpinBox, QStatusBar,
+                             QTabWidget, QTextEdit, QToolBar, QTreeWidget,
+                             QVBoxLayout, QWidget)
 
 # Add project src to path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -197,7 +179,18 @@ class FLLSimMainWindow(QMainWindow):
             QTabBar::tab:hover:!selected { background-color: #F3F3F3; color: #323130; }
             QGroupBox { font-weight: 600; color: #323130; border: 1px solid #E1DFDD; border-radius: 8px; margin-top: 12px; padding-top: 16px; background-color: #FFFFFF; }
             QGroupBox::title { subcontrol-origin: margin; left: 16px; padding: 0 8px; color: #323130; background-color: #FFFFFF; }
-            QPushButton { background-color: #0078D4; color: #FFFFFF; border: 1px solid #0078D4; padding: 8px 16px; border-radius: 4px; font-weight: 400; min-height: 20px; min-width: 64px; }
+            QPushButton {
+                background-color: #0078D4;
+                color: #FFFFFF;
+                border: 1px solid #0078D4;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: 400;
+                min-height: 32px;
+                min-width: 100px;
+                text-align: center;
+                qproperty-alignment: AlignCenter;
+            }
             QPushButton:hover { background-color: #106EBE; border-color: #106EBE; }
             QPushButton:pressed { background-color: #005A9E; border-color: #005A9E; }
             QPushButton:disabled { background-color: #F3F2F1; color: #A19F9D; border-color: #E1DFDD; }
@@ -542,60 +535,77 @@ class FLLSimMainWindow(QMainWindow):
         mission_btn_layout.addWidget(load_mission_btn)
         edit_mission_btn = QPushButton("Edit Mission")
         edit_mission_btn.clicked.connect(self._open_mission_editor)
-        help_menu.addAction(examples_action)
         mission_btn_layout.addWidget(edit_mission_btn)
-        missions_layout.addLayout(mission_btn_layout)        help_menu.addSeparator()
+        missions_layout.addLayout(mission_btn_layout)
         layout.addWidget(missions_group)
-        details_group = QGroupBox("Mission Details")        about_action = QAction('&About FLL-Sim', self)
-        details_layout = QVBoxLayout(details_group)ion')
+        details_group = QGroupBox("Mission Details")
+        details_layout = QVBoxLayout(details_group)
         self.mission_name_label = QLabel("Select a mission")
         details_layout.addWidget(self.mission_name_label)
         self.mission_description = QTextEdit()
-        self.mission_description.setReadOnly(True)    def _create_toolbar(self):
-        details_layout.addWidget(self.mission_description)"""
+        self.mission_description.setReadOnly(True)
+        details_layout.addWidget(self.mission_description)
         scoring_group = QGroupBox("Scoring")
-        scoring_layout = QFormLayout(scoring_group)bar)
+        scoring_layout = QFormLayout(scoring_group)
         self.max_score_label = QLabel("0")
-        scoring_layout.addRow("Max Score:", self.max_score_label)        # Start simulation button
-        self.time_limit_label = QLabel("N/A")🚀 Start")
-        scoring_layout.addRow("Time Limit:", self.time_limit_label)rt_simulation)
+        scoring_layout.addRow("Max Score:", self.max_score_label)
+        self.time_limit_label = QLabel("N/A")
+        scoring_layout.addRow("Time Limit:", self.time_limit_label)
         details_layout.addWidget(scoring_group)
         layout.addWidget(details_group)
-        self.missions_tab_index = self.tab_widget.addTab(widget, "Missions")        # Stop simulation button
-⏹ Stop")
-    def _create_robot_tab(self):top_simulation)
+        self.missions_tab_index = self.tab_widget.addTab(widget, "Missions")
+
+    def _create_robot_tab(self):
         """Create the robot tab."""
         widget = QWidget()
-        layout = QVBoxLayout(widget)        toolbar.addSeparator()
+        layout = QVBoxLayout(widget)
         config_group = QGroupBox("Robot Configuration")
-        config_layout = QFormLayout(config_group)        # Demo button
-        self.robot_width_spin = QSpinBox()ushButton("🎮 Demo")
-        self.robot_width_spin.setRange(10, 50)n_demo)
+        config_layout = QFormLayout(config_group)
+        self.robot_width_spin = QSpinBox()
+        self.robot_width_spin.setRange(10, 50)
         self.robot_width_spin.setValue(18)
         self.robot_width_spin.setSuffix(" cm")
-        config_layout.addRow("Width:", self.robot_width_spin)        toolbar.addSeparator()
+        config_layout.addRow("Width:", self.robot_width_spin)
         self.robot_height_spin = QSpinBox()
-        self.robot_height_spin.setRange(10, 50)        # Progress bar
-        self.robot_height_spin.setValue(20)bar = QProgressBar()
-        self.robot_height_spin.setSuffix(" cm"))
-        config_layout.addRow("Height:", self.robot_height_spin))
+        self.robot_height_spin.setRange(10, 50)
+        self.robot_height_spin.setValue(20)
+        self.robot_height_spin.setSuffix(" cm")
+        config_layout.addRow("Height:", self.robot_height_spin)
         self.robot_mass_spin = QSpinBox()
-        self.robot_mass_spin.setRange(500, 5000)    def _create_quick_start_tab(self):
-        self.robot_mass_spin.setValue(1500)"""
+        self.robot_mass_spin.setRange(500, 5000)
+        self.robot_mass_spin.setValue(1500)
         self.robot_mass_spin.setSuffix(" g")
-        config_layout.addRow("Mass:", self.robot_mass_spin)ut(widget)
+        config_layout.addRow("Mass:", self.robot_mass_spin)
         layout.addWidget(config_group)
-        motor_group = QGroupBox("Motor Configuration")        # Welcome section
-        motor_layout = QVBoxLayout(motor_group)GroupBox("Welcome to FLL-Sim")
+        motor_group = QGroupBox("Motor Configuration")
+        motor_layout = QVBoxLayout(motor_group)
         self.motor_tree = QTreeWidget()
         self.motor_tree.setHeaderLabels(["Port", "Type", "Max Speed"])
-        motor_layout.addWidget(self.motor_tree)        title_label = QLabel("FLL-Sim - First Lego League Simulator")
+        motor_layout.addWidget(self.motor_tree)
         motor_btn_layout = QHBoxLayout()
-        add_motor_btn = QPushButton("Add Motor")ize(16)
+        add_motor_btn = QPushButton("Add Motor")
         add_motor_btn.clicked.connect(self._add_motor)
-        motor_btn_layout.addWidget(add_motor_btn)e_font)
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        welcome_layout.addWidget(title_label)
+        motor_btn_layout.addWidget(add_motor_btn)
+        remove_motor_btn = QPushButton("Remove Motor")
+        remove_motor_btn.clicked.connect(self._remove_motor)
+        motor_btn_layout.addWidget(remove_motor_btn)
+        motor_layout.addLayout(motor_btn_layout)
+        layout.addWidget(motor_group)
+        sensor_group = QGroupBox("Sensor Configuration")
+        sensor_layout = QVBoxLayout(sensor_group)
+        self.sensor_tree = QTreeWidget()
+        self.sensor_tree.setHeaderLabels(["Port", "Type", "Position"])
+        sensor_layout.addWidget(self.sensor_tree)
+        sensor_btn_layout = QHBoxLayout()
+        add_sensor_btn = QPushButton("Add Sensor")
+        add_sensor_btn.clicked.connect(self._add_sensor)
+        sensor_btn_layout.addWidget(add_sensor_btn)
+        remove_sensor_btn = QPushButton("Remove Sensor")
+        remove_sensor_btn.clicked.connect(self._remove_sensor)
+        sensor_btn_layout.addWidget(remove_sensor_btn)
+        sensor_layout.addLayout(sensor_btn_layout)
+        layout.addWidget(sensor_group)
+        self.robot_tab_index = self.tab_widget.addTab(widget, "Robot")
 
         desc_label = QLabel(
             "A comprehensive simulation environment for FLL teams to develop,\n"
@@ -1582,6 +1592,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Backward compatibility: older code expects FLLSimGUI symbol here
+FLLSimGUI = FLLSimMainWindow
 
 # Modularization and maintainability improvements (2025-07-21):
 # - Improved separation of UI components, logic, and threading.

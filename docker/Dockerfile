@@ -16,6 +16,10 @@ ENV PIP_NO_CACHE_DIR=1 \
     FLL_SIM_HEADLESS=0 \
     FLL_SIM_DETERMINISTIC=0
 
+# Use an isolated virtual environment inside the container
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
+
 WORKDIR /app
 
 # System deps for PyQt6 + fonts + Xvfb + misc build tools

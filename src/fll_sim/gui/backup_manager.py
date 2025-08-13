@@ -3,10 +3,13 @@ Backup Manager GUI integration for FLL-Sim
 
 Provides user controls for scheduled cloud backups, status display, and error reporting.
 """
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QListWidget, QMessageBox
-from src.fll_sim.cloud.cloud_auto_backup import CloudAutoBackup
-from src.fll_sim.utils.cloud_utils import CloudUtils
-from src.fll_sim.utils.backup_utils import BackupUtils
+from PyQt6.QtWidgets import (QLabel, QListWidget, QMessageBox, QPushButton,
+                             QVBoxLayout, QWidget)
+
+from fll_sim.cloud.cloud_auto_backup import CloudAutoBackup
+from fll_sim.utils.backup_utils import BackupUtils
+from fll_sim.utils.cloud_utils import CloudUtils
+
 
 class BackupManagerWidget(QWidget):
     """
@@ -79,6 +82,15 @@ class BackupManagerWidget(QWidget):
             except Exception as e:
                 QMessageBox.critical(
                     self,
+                    "Restore Error",
+                    str(e)
+                )
+        else:
+            QMessageBox.warning(
+                self,
+                "No Selection",
+                "Please select a backup to restore."
+            )
                     "Restore Error",
                     str(e)
                 )

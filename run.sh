@@ -19,51 +19,61 @@ PROJECT_DIR="$SCRIPT_DIR"
 echo -e "${BLUE}FLL-Sim GUI Launcher${NC}"
 echo "=================================="
 
-# Check if virtual environment exists
-if [ ! -d "$PROJECT_DIR/fll-sim-env" ]; then
-    echo -e "${YELLOW}Virtual environment not found. Creating one...${NC}"
-    python3 -m venv "$PROJECT_DIR/fll-sim-env"
-    echo -e "${GREEN}Virtual environment created.${NC}"
-fi
-
-# Activate virtual environment
-echo -e "${BLUE}Activating virtual environment...${NC}"
-source "$PROJECT_DIR/fll-sim-env/bin/activate"
-
-# Check if dependencies are installed
-echo -e "${BLUE}Checking dependencies...${NC}"
-if ! python -c "import pygame, pymunk, PyQt6" 2>/dev/null; then
-    echo -e "${YELLOW}Installing missing dependencies...${NC}"
-    pip install pygame pymunk numpy matplotlib pillow pyyaml PyQt6
-    echo -e "${GREEN}Dependencies installed.${NC}"
-fi
-
-# Add project src to Python path
-export PYTHONPATH="$PROJECT_DIR/src:$PYTHONPATH"
-
-# Check for GUI module
-GUI_MODULE="$PROJECT_DIR/src/fll_sim/gui/main_gui.py"
-if [ ! -f "$GUI_MODULE" ]; then
-    echo -e "${RED}GUI module not found at: $GUI_MODULE${NC}"
-    echo -e "${YELLOW}Running setup to create GUI components...${NC}"
-    python "$PROJECT_DIR/setup.py" --no-examples
-fi
-
-# Launch GUI
-echo -e "${GREEN}Launching FLL-Sim GUI...${NC}"
-echo -e "${BLUE}You can close this terminal window after the GUI opens.${NC}"
-
-# Try to launch the GUI, fallback to command line if it fails
-if [ -f "$GUI_MODULE" ]; then
+# Prefer running in Docker for clean environment and correct venv activation
+if command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose.yml" ]; then
+    echo -e "${BLUE}Docker detected. Starting GUI in container...${NC}"
+    # Use the GUI service if defined, else fallback to headless with display passthrough
+    if docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" config --services | grep -q "gui"; then
+        # Allow local X11 connections for containers (best-effort, ignore failures)
+        if command -v xhost >/dev/null 2>&1; then
+            xhost +local:root >/dev/null 2>&1 || true
+            xhost +local:$(id -un) >/dev/null 2>&1 || true
+        fi
+        docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up --build gui
+    else
+        # Fallback: run runtime image with host display
+        xhost +local:root >/dev/null 2>&1 || true
+        docker run --rm \
+          -e DISPLAY=$DISPLAY \
+          -v /tmp/.X11-unix:/tmp/.X11-unix \
+          -v "$PROJECT_DIR":"/app" \
+          -w /app \
+          fll-sim:latest \
+          bash -lc \
+            ". venv/bin/activate 2>/dev/null || true; export PYTHONPATH=/app/src:$PYTHONPATH; python -c 'import sys; sys.path.insert(0, \"src\"); from fll_sim.gui.main_gui import main; main()'"
+    fi
+else
+    echo -e "${YELLOW}Docker not available. Using local virtual environment...${NC}"
+    # Local venv fallback
+    if [ ! -d "$PROJECT_DIR/fll-sim-env" ]; then
+        echo -e "${YELLOW}Virtual environment not found. Creating one...${NC}"
+        python3 -m venv "$PROJECT_DIR/fll-sim-env"
+        echo -e "${GREEN}Virtual environment created.${NC}"
+    fi
+    echo -e "${BLUE}Activating virtual environment...${NC}"
+    # shellcheck source=/dev/null
+    source "$PROJECT_DIR/fll-sim-env/bin/activate"
+    echo -e "${BLUE}Checking dependencies...${NC}"
+    if ! python -c "import pygame, pymunk, PyQt6" 2>/dev/null; then
+        echo -e "${YELLOW}Installing missing dependencies...${NC}"
+        pip install -r "$PROJECT_DIR/requirements.txt"
+        echo -e "${GREEN}Dependencies installed.${NC}"
+    fi
+    export PYTHONPATH="$PROJECT_DIR/src:$PYTHONPATH"
+    GUI_MODULE="$PROJECT_DIR/src/fll_sim/gui/main_gui.py"
+    if [ ! -f "$GUI_MODULE" ]; then
+        echo -e "${RED}GUI module not found at: $GUI_MODULE${NC}"
+        echo -e "${YELLOW}Running setup to create GUI components...${NC}"
+        python "$PROJECT_DIR/setup.py" --no-examples
+    fi
+    echo -e "${GREEN}Launching FLL-Sim GUI...${NC}"
+    echo -e "${BLUE}You can close this terminal window after the GUI opens.${NC}"
     cd "$PROJECT_DIR" && python -c "
 import sys
 sys.path.insert(0, 'src')
 from fll_sim.gui.main_gui import main
 main()
 " "$@"
-else
-    echo -e "${YELLOW}GUI not available, launching command line interface...${NC}"
-    python "$PROJECT_DIR/main.py" "$@"
 fi
 
 echo -e "${GREEN}FLL-Sim GUI session ended.${NC}"

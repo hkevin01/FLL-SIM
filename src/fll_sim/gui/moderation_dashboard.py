@@ -3,8 +3,12 @@ Moderation Dashboard GUI for FLL-Sim
 
 Provides a user interface for community content moderation and analytics visualization.
 """
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QListWidget, QHBoxLayout
-from src.fll_sim.education.moderation_analytics import ModerationManager, AnalyticsDashboard
+from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QListWidget, QPushButton,
+                             QVBoxLayout, QWidget)
+
+from fll_sim.education.moderation_analytics import (AnalyticsDashboard,
+                                                    ModerationManager)
+
 
 class ModerationDashboardWidget(QWidget):
     """
@@ -46,6 +50,15 @@ class ModerationDashboardWidget(QWidget):
             self.manager.moderate_content(idx, True)
             self._update_submissions()
 
+    def _reject(self):
+        idx = self.submissions_list.currentRow()
+        if idx >= 0:
+            self.manager.moderate_content(idx, False)
+            self._update_submissions()
+
+    def _update_analytics(self):
+        stats = self.analytics.get_stats()
+        self.analytics_label.setText(str(stats))
     def _reject(self):
         idx = self.submissions_list.currentRow()
         if idx >= 0:
