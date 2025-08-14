@@ -34,18 +34,18 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libgles-dev libglvnd-dev libglx-dev libopengl-dev \
     x11proto-dev libx11-dev libxcb1-dev \
     libegl1-mesa-dev libgl1-mesa-dev \
-    fonts-dejavu-core \
+    libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 \
+    fonts-dejavu-core fonts-noto-color-emoji libqt6svg6 \
+    hicolor-icon-theme adwaita-icon-theme qt6-gtk-platformtheme \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for headless OpenGL/EGL
-ENV DISPLAY=:99 \
-    QT_QPA_PLATFORM=offscreen \
-    QT_GRAPHICSSYSTEM=software \
+# Set environment variables for OpenGL/EGL; headless/X11 handled by entrypoint
+ENV QT_GRAPHICSSYSTEM=software \
     LIBGL_ALWAYS_INDIRECT=1 \
     LIBGL_ALWAYS_SOFTWARE=1 \
     MESA_GL_VERSION_OVERRIDE=3.3 \
     MESA_GLSL_VERSION_OVERRIDE=330 \
-    FLL_SIM_HEADLESS=1
+    FLL_SIM_HEADLESS=0
 
 # Copy lock / requirements first for caching
 COPY requirements.txt ./

@@ -16,5 +16,10 @@ else
   else
     echo "[entrypoint] Using host DISPLAY=$DISPLAY"
   fi
+  # Ensure we are not stuck on offscreen platform in non-headless mode
+  if [[ "${QT_QPA_PLATFORM:-}" == "offscreen" || -z "${QT_QPA_PLATFORM:-}" ]]; then
+    export QT_QPA_PLATFORM=xcb
+    echo "[entrypoint] Forcing QT_QPA_PLATFORM=xcb for GUI"
+  fi
   exec "$@"
 fi
