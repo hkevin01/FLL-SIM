@@ -211,6 +211,21 @@ docker compose run --rm sim-gui
 | Black window / no display | Verify DISPLAY and permissions (use `xhost +local:root`) |
 | Wayland warnings | Set `QT_QPA_PLATFORM=xcb` |
 
+### Host system pygame (optional)
+
+If your OS enforces PEP 668 (externally managed Python), system-wide `pip install` may be blocked. Prefer using the bundled virtual environment (`fll-sim-env/`) or install pygame via your package manager:
+
+- Debian/Ubuntu: `sudo apt-get install python3-pygame`
+- Fedora: `sudo dnf install python3-pygame`
+- RHEL/CentOS: `sudo yum install python3-pygame`
+
+Alternatively, we provide a helper target and script:
+
+- Makefile target: `make install-system-pygame`
+- Script: `scripts/install-system-pygame.sh` (falls back to `pip install pygame --break-system-packages` when necessary)
+
+Docker builds already install pygame from `requirements.txt` inside an isolated venv in the image.
+
 
 ## 🪟 Windows Executable (Preview)
 

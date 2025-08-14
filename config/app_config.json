@@ -8,5 +8,10 @@
   "logging": {
     "log_file": "data/logs/app.log",
     "log_level": "INFO"
+  },
+  "visual": {
+    "background_image": "",
+    "background_size_mm": "2400x1200",
+    "show_grid": true
   }
 }

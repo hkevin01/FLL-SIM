@@ -42,6 +42,10 @@ class MapConfig:
     show_mission_areas: bool = True
     mission_area_alpha: int = 128  # Transparency for mission overlays
 
+    # Background mat image support
+    background_image_path: Optional[str] = None  # Path to mat image
+    background_scale_to_size: bool = True  # Scale image to field dimensions
+
 
 @dataclass
 class Obstacle:
@@ -148,6 +152,34 @@ class GameMap:
 
         # Setup default map
         self._setup_default_map()
+
+    @classmethod
+    def load_season(cls, season: str) -> "GameMap":
+        """
+        Load a complete FLL season map with missions and obstacles.
+
+        Args:
+            season: FLL season identifier (e.g. "2024-submerged")
+
+        Returns:
+            GameMap instance configured for the specified season
+        """
+        game_map = cls()
+        season_normalized = season.upper().replace("-", "_")
+        
+        if season_normalized == "2024_SUBMERGED":
+            game_map._create_submerged_2024_map()
+        else:
+            # Default to 2024 SUBMERGED for unknown seasons
+            game_map._create_submerged_2024_map()
+
+        # Load corresponding missions
+        game_map.mission_manager.load_fll_season(season)
+
+        # Create mission area overlays
+        game_map._create_mission_overlays()
+        
+        return game_map
 
     def _setup_default_map(self):
         """Setup a default map with basic elements."""

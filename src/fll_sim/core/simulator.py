@@ -15,10 +15,12 @@ automatically stop after N seconds.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import threading
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable, List, Optional, cast
 
 import pygame as _pygame
@@ -389,6 +391,35 @@ class Simulator:
         return None
 
 
+def _load_visual_defaults() -> tuple[str, str]:
+    """Load default background settings from config/app_config.json.
+
+    Returns (background_image_path, background_size_mm) where either may be ''.
+    """
+    try:
+        cfg_path = (
+            Path(__file__).resolve().parents[3]
+            / 'config'
+            / 'app_config.json'
+        )
+        data = json.loads(Path(cfg_path).read_text(encoding='utf-8'))
+        visual = data.get('visual', {}) if isinstance(data, dict) else {}
+        bg = str(visual.get('background_image', '')).strip()
+        size = str(visual.get('background_size_mm', '')).strip()
+        # Resolve assets-relative paths
+        if bg and not os.path.isabs(bg):
+            root = Path(__file__).resolve().parents[3]
+            candidate = (
+                root / 'assets' / bg
+                if not bg.startswith('assets')
+                else root / bg
+            )
+            bg = str(candidate)
+        return bg, size
+    except (OSError, json.JSONDecodeError):
+        return '', ''
+
+
 def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     """Parse CLI arguments for running the simulator as a module."""
     parser = argparse.ArgumentParser(description="Run FLL-Sim simulator")
@@ -440,6 +471,13 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 def main(argv: Optional[List[str]] = None) -> None:
     """Module entrypoint: construct and run the simulator based on CLI args."""
     args = _parse_args(argv)
+    # Fill from config defaults if missing
+    if not args.background_image:
+        cfg_bg, cfg_size = _load_visual_defaults()
+        if cfg_bg:
+            args.background_image = cfg_bg
+        if cfg_size and not args.background_size:
+            args.background_size = cfg_size
 
     # Graphics fallbacks to avoid GLX issues in containers/X11
     if args.headless:
@@ -476,8 +514,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         )
         if bg_path and os.path.exists(bg_path):
             # Determine world size for the image
-            width_mm = game_map.config.width
-            height_mm = game_map.config.height
+            width_mm = getattr(game_map.config, 'width', 2400)
+            height_mm = getattr(game_map.config, 'height', 1200)
             if args.background_size and "x" in args.background_size:
                 try:
                     w_str, h_str = args.background_size.lower().split("x", 1)
@@ -492,10 +530,9 @@ def main(argv: Optional[List[str]] = None) -> None:
                     f"[sim] Background loaded: {bg_path} "
                     f"-> world {int(width_mm)}x{int(height_mm)} mm"
                 )
-    except (
-        FileNotFoundError,
-        OSError,
-    ) as e:
+        elif bg_path:
+            print(f"[sim] Background not found: {bg_path}")
+    except (FileNotFoundError, OSError) as e:
         print(f"[sim] Warning: failed to load background image: {e}")
 
     # Support timed exit for CI/headless demos

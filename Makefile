@@ -1,6 +1,6 @@
 # Universal Development Environment Makefile
 # Provides consistent commands across all project types
-.PHONY: help setup start stop restart clean build test lint format security docs backup
+.PHONY: help setup start stop restart clean build test lint format security docs backup install-system-pygame
 
 # Default target
 .DEFAULT_GOAL := help
@@ -61,6 +61,11 @@ endif
 	@echo ""
 	@echo "$(GREEN)Available commands:$(RESET)"
 	@awk 'BEGIN {FS = ":.*##"; printf ""} /^[a-zA-Z_-]+:.*?##/ { printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+install-system-pygame: ## Install pygame into system Python (uses apt/dnf/yum or pip --break-system-packages)
+	@echo "$(GREEN)Installing system pygame...$(RESET)"
+	@chmod +x scripts/install-system-pygame.sh
+	@scripts/install-system-pygame.sh || echo "$(YELLOW)⚠️  Failed to install system pygame. Consider using the bundled venv (fll-sim-env) instead.$(RESET)"
 
 setup: ## Set up development environment
 	@echo "$(GREEN)Setting up development environment...$(RESET)"

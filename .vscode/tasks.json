@@ -190,6 +190,15 @@
 				"--headless"
 			],
 			"group": "test"
+		},
+		{
+			"label": "FLL-Sim: Install System Pygame",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"scripts/install-system-pygame.sh"
+			],
+			"group": "build"
 		}
 	]
 }
