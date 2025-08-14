@@ -10,6 +10,8 @@ Use --headless for CI or servers without a display, and --exit-after to
 automatically stop after N seconds.
 """
 
+# pylint: disable=no-member
+
 from __future__ import annotations
 
 import argparse
@@ -17,9 +19,9 @@ import os
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, cast
 
-import pygame
+import pygame as _pygame
 import pymunk
 import pymunk.pygame_util
 
@@ -28,6 +30,9 @@ from ..robot.robot import Robot
 from ..utils.errors import FLLSimError
 from ..utils.logger import FLLLogger
 from ..visualization.renderer import Renderer
+
+# Treat pygame as dynamically typed to satisfy static checkers without stubs
+pygame = cast(Any, _pygame)
 
 
 @dataclass
@@ -76,7 +81,7 @@ class Simulator:
             self.space.gravity = self.config.gravity
 
             # Pygame
-            pygame.init()  # type: ignore[attr-defined]
+            pygame.init()
             self.screen = pygame.display.set_mode(
                 (self.config.window_width, self.config.window_height)
             )
@@ -171,10 +176,10 @@ class Simulator:
     def _setup_input_handlers(self) -> None:
         """Setup keyboard and mouse input handlers."""
         self.key_handlers = {
-            pygame.K_SPACE: self.toggle_pause,  # type: ignore[attr-defined]
-            pygame.K_r: self.reset_simulation,  # type: ignore[attr-defined]
-            pygame.K_q: self.stop,  # type: ignore[attr-defined]
-            pygame.K_d: self.toggle_debug,  # type: ignore[attr-defined]
+            pygame.K_SPACE: self.toggle_pause,
+            pygame.K_r: self.reset_simulation,
+            pygame.K_q: self.stop,
+            pygame.K_d: self.toggle_debug,
         }
 
     def start(self) -> None:
@@ -265,20 +270,20 @@ class Simulator:
             self.clock.tick(self.config.fps)
 
     # Cleanup
-    pygame.quit()  # type: ignore[attr-defined]
+    pygame.quit()
 
     def _handle_events(self) -> None:
         """Handle pygame events."""
-        for event in pygame.event.get():  # type: ignore[attr-defined]
+        for event in pygame.event.get():
             if (
                 event.type
-                == pygame.QUIT  # type: ignore[attr-defined]
+                == pygame.QUIT
             ):
                 self.stop()
 
             elif (
                 event.type
-                == pygame.KEYDOWN  # type: ignore[attr-defined]
+                == pygame.KEYDOWN
             ):
                 if event.key in self.key_handlers:
                     self.key_handlers[event.key]()
@@ -288,13 +293,13 @@ class Simulator:
 
             elif (
                 event.type
-                == pygame.KEYUP  # type: ignore[attr-defined]
+                == pygame.KEYUP
             ):
                 self.robot.handle_key_event(event)
 
             elif (
                 event.type
-                == pygame.MOUSEBUTTONDOWN  # type: ignore[attr-defined]
+                == pygame.MOUSEBUTTONDOWN
             ):
                 self._handle_mouse_click(event)
 
@@ -331,7 +336,7 @@ class Simulator:
             self._render_physics_debug()
 
         # Update display
-    pygame.display.flip()  # type: ignore[attr-defined]
+        pygame.display.flip()
 
     def _render_debug_info(self) -> None:
         """Render debug information overlay."""
@@ -350,7 +355,7 @@ class Simulator:
                     text, x, y, 'small', with_bg=True
                 )
             else:
-                font = pygame.font.Font(None, 24)  # type: ignore[attr-defined]
+                font = pygame.font.Font(None, 24)
                 surf = font.render(text, True, (255, 255, 255))
                 self.screen.blit(surf, (x, y))
 
@@ -490,7 +495,6 @@ def main(argv: Optional[List[str]] = None) -> None:
     except (
         FileNotFoundError,
         OSError,
-        pygame.error,  # type: ignore[attr-defined]
     ) as e:
         print(f"[sim] Warning: failed to load background image: {e}")
 
