@@ -465,12 +465,36 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
             "(e.g., 2400x1200)"
         ),
     )
+    parser.add_argument(
+        "--mat-url",
+        dest="mat_url",
+        default="",
+        help="Download FLL mat image from URL (cached in assets/mats/)",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Module entrypoint: construct and run the simulator based on CLI args."""
     args = _parse_args(argv)
+
+    # Handle mat URL download before checking for background image
+    if args.mat_url and not args.background_image:
+        try:
+            from ..scripts.fetch_mat import fetch_mat_image
+
+            # Cache mat in assets/mats/<season>/
+            assets_dir = Path(__file__).parent.parent.parent.parent / "assets"
+            mat_dir = assets_dir / "mats" / args.season
+            mat_dir.mkdir(parents=True, exist_ok=True)
+            mat_path = mat_dir / "mat.png"
+            print(f"[sim] Downloading mat from {args.mat_url}...")
+            fetch_mat_image(args.mat_url, mat_path)
+            args.background_image = str(mat_path)
+            print(f"[sim] Mat cached to {mat_path}")
+        except Exception as e:
+            print(f"[sim] Warning: Failed to download mat: {e}")
+
     # Fill from config defaults if missing
     if not args.background_image:
         cfg_bg, cfg_size = _load_visual_defaults()

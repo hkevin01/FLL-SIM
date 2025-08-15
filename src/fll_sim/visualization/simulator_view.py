@@ -4,18 +4,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QRectF
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem
-from PyQt6.QtGui import QBrush, QColor
+from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtGui import QBrush, QColor, QPainter
+from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsScene, QGraphicsView
 
 from ..environment.game_map import GameMap
-from .background import BackgroundRenderer, BackgroundConfig
+from .background import BackgroundConfig, BackgroundRenderer
 
 
 class SimulatorView(QGraphicsView):
     """
-    A QGraphicsView for displaying the FLL-Sim game map with background support.
-    
+    A QGraphicsView for displaying the FLL-Sim game map with background
+    support.
+
     Features:
     - Background mat image support (scaled to physical size)
     - Procedural fallback background
@@ -45,24 +46,30 @@ class SimulatorView(QGraphicsView):
 
         # Background renderer
         bg_cfg = BackgroundConfig(width_mm=w_mm, height_mm=h_mm)
-        self._background = BackgroundRenderer(
-            px_per_mm=self._px_per_mm, cfg=bg_cfg, image_path=mat_path
-        )
-        self._scene.addItem(self._background.item)
+        self._background = BackgroundRenderer(config=bg_cfg)
+
+        # Load image if provided
+        if mat_path:
+            self._background.load_image(mat_path)
+
+        # Add background to scene
+        bg_item = self._background.create_graphics_item()
+        self._scene.addItem(bg_item)
 
         # Add map elements (obstacles, color zones, etc.)
         self._add_map_elements()
 
         # Configure view settings
         self.setRenderHints(
-            self.renderHints() |
-            self.RenderHint.Antialiasing |
-            self.RenderHint.SmoothPixmapTransform
+            QPainter.RenderHint.Antialiasing |
+            QPainter.RenderHint.SmoothPixmapTransform
         )
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
-        
+
         # Fit the whole mat in view initially
-        self.fitInView(self._scene.sceneRect(), mode=1)  # KeepAspectRatio
+        self.fitInView(
+            self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio
+        )
 
     def _add_map_elements(self) -> None:
         """Add obstacles, color zones, and other map elements to the scene."""
@@ -86,19 +93,22 @@ class SimulatorView(QGraphicsView):
                 zone.width,
                 zone.height
             )
-            zone_item.setBrush(QBrush(QColor(*zone.color, 128)))  # Semi-transparent
+            # Semi-transparent
+            zone_item.setBrush(QBrush(QColor(*zone.color, 128)))
             zone_item.setZValue(5)  # Above background, below obstacles
             self._scene.addItem(zone_item)
 
     def toggle_background_visibility(self, visible: bool) -> None:
         """Toggle visibility of the background mat/grid."""
-        self._background.item.setVisible(visible)
+        self._background.set_visible(visible)
 
     def resizeEvent(self, event):
         """Keep the whole mat visible on resize."""
         super().resizeEvent(event)
         # Keep the whole mat visible
-        self.fitInView(self._scene.sceneRect(), mode=1)  # KeepAspectRatio
+        self.fitInView(
+            self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio
+        )
 
     def get_background_renderer(self) -> BackgroundRenderer:
         """Access to the background renderer for additional configuration."""

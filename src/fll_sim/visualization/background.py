@@ -1,171 +1,193 @@
-# src/fll_sim/visualization/background.py
-from __future__ import annotations
+"""FLL Simulator Background Rendering
 
-from dataclasses import dataclass
+Provides background image and procedural rendering for the simulator GUI.
+"""
+
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
-from PyQt6.QtCore import QRectF, Qt
-from PyQt6.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QBrush
-from PyQt6.QtWidgets import (
-    QGraphicsPixmapItem, QGraphicsItemGroup, QGraphicsRectItem
-)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QImage, QPainter, QPen, QPixmap
+from PyQt6.QtWidgets import QGraphicsPixmapItem
 
 
 @dataclass
 class BackgroundConfig:
-    """Configuration for map background rendering."""
-    # Physical size of the mat in millimeters (FLL table/mat is typically
-    # 2362 x 1143 mm, adjust per season if needed)
-    width_mm: float
-    height_mm: float
-    # Optional: grayscale alpha of procedural grid, 0 disables
-    grid_mm: float = 150.0
-    grid_alpha: int = 32
-    border_thickness_mm: float = 70.0
-    # x,y,w,h for a "home/base" area in mm
-    base_zone_mm: Tuple[float, float, float, float] = (0, 0, 450, 450)
-    background_color: QColor = QColor(245, 245, 245)
-    border_color: QColor = QColor(20, 20, 20)
-    grid_color: QColor = QColor(0, 0, 0, 32)
+    """Configuration for background rendering."""
+    # Physical dimensions (mm)
+    width_mm: float = 2400.0
+    height_mm: float = 1200.0
+
+    # Visual properties
+    background_color: QColor = field(
+        default_factory=lambda: QColor(240, 240, 240)
+    )  # Light gray
+    border_color: QColor = field(
+        default_factory=lambda: QColor(20, 20, 20)
+    )  # Dark gray
+    border_width: int = 3
+
+    # Mission area grid
+    grid_size_mm: float = 300.0  # 30cm squares
+    grid_color: QColor = field(
+        default_factory=lambda: QColor(200, 200, 200)
+    )
+    grid_width: int = 1
+
+    # Home base area (mm from edge)
+    home_base_width_mm: float = 600.0  # 60cm
+    home_base_color: QColor = field(
+        default_factory=lambda: QColor(180, 220, 180)
+    )  # Light green
 
 
 class BackgroundRenderer:
-    """
-    Renders a background for the GameMap into a QGraphicsScene.
+    """Renders FLL table backgrounds for the simulator."""
 
-    - If an image is available, it is scaled to [width_mm, height_mm]
-      in scene units (mm).
-    - Otherwise, draws a procedural FLL-style table with border, base zone,
-      and subtle grid.
-    """
+    def __init__(self, config: Optional[BackgroundConfig] = None):
+        """Initialize background renderer.
 
-    def __init__(
-        self,
-        px_per_mm: float,
-        cfg: BackgroundConfig,
-        image_path: Optional[Path] = None,
-    ) -> None:
-        self._px_per_mm = float(px_per_mm)
-        self._cfg = cfg
-        self._image_path = Path(image_path) if image_path else None
+        Args:
+            config: Background configuration. Uses defaults if None.
+        """
+        self._cfg = config or BackgroundConfig()
+        self._pixmap: Optional[QPixmap] = None
+        self._graphics_item: Optional[QGraphicsPixmapItem] = None
 
-        # Group to hold background items; negative Z so it stays behind
-        # everything.
-        self.group = QGraphicsItemGroup()
-        self.group.setZValue(-1000)
+    def load_image(self, image_path: Path) -> bool:
+        """Load background image from file.
 
-        # Build background once
-        self._build()
+        Args:
+            image_path: Path to image file (PNG, JPG, etc.)
 
-    @property
-    def item(self) -> QGraphicsItemGroup:
-        return self.group
+        Returns:
+            True if image loaded successfully, False otherwise.
+        """
+        if not image_path.exists():
+            return False
 
-    def _build(self) -> None:
-        # Scene rect in mm
-        rect_mm = QRectF(0, 0, self._cfg.width_mm, self._cfg.height_mm)
+        image = QImage(str(image_path))
+        if image.isNull():
+            return False
 
-        # Try image first
-        if self._image_path and self._image_path.exists():
-            pix_item = self._build_image_background(rect_mm, self._image_path)
-            if pix_item:
-                self.group.addToGroup(pix_item)
-                return  # done
+        # Scale image to maintain aspect ratio within config dimensions
+        pixmap = QPixmap.fromImage(image)
+        self._pixmap = self._scale_image_to_fit(pixmap)
+        return True
 
-        # Fallback: procedural
-        self._build_procedural_background(rect_mm)
+    def _scale_image_to_fit(self, pixmap: QPixmap) -> QPixmap:
+        """Scale pixmap to fit within config dimensions maintaining aspect."""
+        target_w = int(self._cfg.width_mm)
+        target_h = int(self._cfg.height_mm)
 
-    def _build_image_background(
-        self, rect_mm: QRectF, path: Path
-    ) -> Optional[QGraphicsPixmapItem]:
-        img = QImage(str(path))
-        if img.isNull():
-            return None
+        # Calculate scaling to fit within target while maintaining aspect
+        scale_w = target_w / pixmap.width()
+        scale_h = target_h / pixmap.height()
+        scale = min(scale_w, scale_h)
 
-        # Create a pixmap sized to mm->px scaling
-        target_px_w = max(1, int(round(rect_mm.width() * self._px_per_mm)))
-        target_px_h = max(1, int(round(rect_mm.height() * self._px_per_mm)))
-        pix = QPixmap(target_px_w, target_px_h)
-        pix.fill(Qt.GlobalColor.transparent)
+        new_w = int(pixmap.width() * scale)
+        new_h = int(pixmap.height() * scale)
 
-        p = QPainter(pix)
-        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-        # Draw scaled with aspect fit, then center on target canvas
-        img_scaled = img.scaled(
-            target_px_w, target_px_h,
+        return pixmap.scaled(
+            new_w, new_h,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation
         )
-        x = (target_px_w - img_scaled.width()) // 2
-        y = (target_px_h - img_scaled.height()) // 2
-        p.drawImage(x, y, img_scaled)
-        p.end()
 
-        item = QGraphicsPixmapItem(pix)
-        # Place at (0,0) in mm; scale item so 1 scene unit == 1 mm
-        item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)
-        # Convert px into scene mm by scaling
-        # The pixmap currently has pixel dimensions, but our scene uses
-        # mm units; so set scale so that pixmap pixel -> mm:
-        # 1px -> 1/self._px_per_mm mm.
-        scale = 1.0 / self._px_per_mm
-        item.setScale(scale)
-        item.setOffset(0, 0)
-        item.setZValue(-1000)
+    def create_graphics_item(self) -> QGraphicsPixmapItem:
+        """Create QGraphicsPixmapItem for the background.
+
+        Returns:
+            Graphics item ready to add to scene.
+        """
+        if self._pixmap is None:
+            # Create procedural background if no image loaded
+            self._pixmap = self._create_procedural_background()
+
+        item = QGraphicsPixmapItem(self._pixmap)
+        item.setZValue(-1000)  # Behind everything else
+
+        # Center the image in the coordinate system
+        item.setOffset(
+            -self._pixmap.width() / 2,
+            -self._pixmap.height() / 2
+        )
+
+        self._graphics_item = item
         return item
 
-    def _build_procedural_background(self, rect_mm: QRectF) -> None:
-        # Base fill
-        base = QGraphicsRectItem(rect_mm)
-        base.setBrush(QBrush(self._cfg.background_color))
-        base.setPen(QPen(Qt.PenStyle.NoPen))
-        base.setZValue(-1000)
-        self.group.addToGroup(base)
+    def _create_procedural_background(self) -> QPixmap:
+        """Create procedural FLL table background."""
+        # Create pixmap with config dimensions
+        w = int(self._cfg.width_mm)
+        h = int(self._cfg.height_mm)
+        pixmap = QPixmap(w, h)
+        pixmap.fill(self._cfg.background_color)
 
-        # Border (table wall)
-        if self._cfg.border_thickness_mm > 0:
-            t = self._cfg.border_thickness_mm
-            # Outer rect for visual wall; draw as 4 rects for clarity
-            w = rect_mm.width()
-            h = rect_mm.height()
-            walls = [
-                QRectF(0, 0, w, t),             # top
-                QRectF(0, h - t, w, t),         # bottom
-                QRectF(0, 0, t, h),             # left
-                QRectF(w - t, 0, t, h),         # right
-            ]
-            for r in walls:
-                wall = QGraphicsRectItem(r)
-                wall.setBrush(QBrush(self._cfg.border_color))
-                wall.setPen(QPen(Qt.PenStyle.NoPen))
-                wall.setZValue(-999)
-                self.group.addToGroup(wall)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Grid
-        if self._cfg.grid_mm and self._cfg.grid_alpha > 0:
-            step = self._cfg.grid_mm
-            x = step
-            while x < rect_mm.width():
-                line = QGraphicsRectItem(QRectF(x, 0, 0.5, rect_mm.height()))
-                line.setPen(QPen(Qt.PenStyle.NoPen))
-                line.setBrush(QBrush(self._cfg.grid_color))
-                line.setZValue(-998)
-                self.group.addToGroup(line)
-                x += step
-            y = step
-            while y < rect_mm.height():
-                line = QGraphicsRectItem(QRectF(0, y, rect_mm.width(), 0.5))
-                line.setPen(QPen(Qt.PenStyle.NoPen))
-                line.setBrush(QBrush(self._cfg.grid_color))
-                line.setZValue(-998)
-                self.group.addToGroup(line)
-                y += step
+        # Draw border
+        pen = QPen(self._cfg.border_color, self._cfg.border_width)
+        painter.setPen(pen)
+        painter.drawRect(0, 0, w - 1, h - 1)
 
-        # Base/home zone
-        bx, by, bw, bh = self._cfg.base_zone_mm
-        base_zone = QGraphicsRectItem(QRectF(bx, by, bw, bh))
-        base_zone.setBrush(QBrush(QColor(200, 230, 255)))
-        base_zone.setPen(QPen(QColor(80, 120, 180), 2))
-        base_zone.setZValue(-997)
-        self.group.addToGroup(base_zone)
+        # Draw mission grid
+        self._draw_mission_grid(painter, w, h)
+
+        # Draw home base areas
+        self._draw_home_bases(painter, w, h)
+
+        painter.end()
+        return pixmap
+
+    def _draw_mission_grid(self, painter: QPainter, w: int, h: int) -> None:
+        """Draw mission area grid."""
+        pen = QPen(self._cfg.grid_color, self._cfg.grid_width)
+        painter.setPen(pen)
+
+        grid_size = int(self._cfg.grid_size_mm)
+
+        # Vertical lines
+        x = grid_size
+        while x < w:
+            painter.drawLine(x, 0, x, h)
+            x += grid_size
+
+        # Horizontal lines
+        y = grid_size
+        while y < h:
+            painter.drawLine(0, y, w, y)
+            y += grid_size
+
+    def _draw_home_bases(self, painter: QPainter, w: int, h: int) -> None:
+        """Draw home base areas."""
+        base_width = int(self._cfg.home_base_width_mm)
+
+        # Left home base
+        painter.fillRect(0, 0, base_width, h, self._cfg.home_base_color)
+
+        # Right home base
+        painter.fillRect(
+            w - base_width,
+            0,
+            base_width,
+            h,
+            self._cfg.home_base_color,
+        )
+
+    def toggle_visibility(self) -> None:
+        """Toggle background visibility."""
+        if self._graphics_item:
+            visible = self._graphics_item.isVisible()
+            self._graphics_item.setVisible(not visible)
+
+    def set_visible(self, visible: bool) -> None:
+        """Set background visibility."""
+        if self._graphics_item:
+            self._graphics_item.setVisible(visible)
+
+    def get_graphics_item(self) -> Optional[QGraphicsPixmapItem]:
+        """Get the current graphics item."""
+        return self._graphics_item

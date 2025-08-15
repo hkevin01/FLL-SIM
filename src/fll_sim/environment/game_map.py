@@ -166,7 +166,7 @@ class GameMap:
         """
         game_map = cls()
         season_normalized = season.upper().replace("-", "_")
-        
+
         if season_normalized == "2024_SUBMERGED":
             game_map._create_submerged_2024_map()
         else:
@@ -178,7 +178,7 @@ class GameMap:
 
         # Create mission area overlays
         game_map._create_mission_overlays()
-        
+
         return game_map
 
     def _setup_default_map(self):
