@@ -16,11 +16,20 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
 
-echo -e "${BLUE}FLL-Sim GUI Launcher${NC}"
+echo -e "${BLUE}FLL-Sim GUI Launcher (Enhanced)${NC}"
 echo "=================================="
 
-# Prefer running in Docker for clean environment and correct venv activation
-if command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose.yml" ]; then
+# Optional overrides
+SEASON=${SEASON:-latest}
+MAT_URL=${MAT_URL:-}
+MAT_PDF_URL=${MAT_PDF_URL:-}
+MAT_PDF_PAGE=${MAT_PDF_PAGE:-0}
+MAT_PDF_DPI=${MAT_PDF_DPI:-300}
+MAT_PDF_PAGE_LABEL=${MAT_PDF_PAGE_LABEL:-}
+MAT_PDF_TOC_TITLE=${MAT_PDF_TOC_TITLE:-}
+
+# Prefer running in Docker unless FORCE_LOCAL is set
+if [ -z "$FORCE_LOCAL" ] && command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose.yml" ]; then
     echo -e "${BLUE}Docker detected. Starting GUI in container...${NC}"
     # Use the GUI service if defined, else fallback to headless with display passthrough
     if docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" config --services | grep -q "gui"; then
@@ -29,10 +38,21 @@ if command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose
             xhost +local:root >/dev/null 2>&1 || true
             xhost +local:$(id -un) >/dev/null 2>&1 || true
         fi
-        docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up --build gui
+                docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up --build gui
     else
         # Fallback: run runtime image with host display
         xhost +local:root >/dev/null 2>&1 || true
+                # Build enhanced launcher command
+                ENH_ARGS=("launch_gui_enhanced.py" "--season" "$SEASON")
+                if [ -n "$MAT_PDF_URL" ]; then
+                    ENH_ARGS+=("--mat-pdf-url" "$MAT_PDF_URL" "--mat-pdf-page" "$MAT_PDF_PAGE" "--mat-pdf-dpi" "$MAT_PDF_DPI")
+                    [ -n "$MAT_PDF_PAGE_LABEL" ] && ENH_ARGS+=("--mat-pdf-page-label" "$MAT_PDF_PAGE_LABEL")
+                    [ -n "$MAT_PDF_TOC_TITLE" ] && ENH_ARGS+=("--mat-pdf-toc-title" "$MAT_PDF_TOC_TITLE")
+                elif [ -n "$MAT_URL" ]; then
+                    ENH_ARGS+=("--mat-url" "$MAT_URL")
+                fi
+                # Pass through any extra args
+                ENH_ARGS+=("$@")
         docker run --rm \
           -e DISPLAY=$DISPLAY \
           -v /tmp/.X11-unix:/tmp/.X11-unix \
@@ -40,7 +60,7 @@ if command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose
           -w /app \
           fll-sim:latest \
           bash -lc \
-            ". venv/bin/activate 2>/dev/null || true; export PYTHONPATH=/app/src:$PYTHONPATH; python -c 'import sys; sys.path.insert(0, \"src\"); from fll_sim.gui.main_gui import main; main()'"
+                        ". venv/bin/activate 2>/dev/null || true; export PYTHONPATH=/app/src:$PYTHONPATH; python -u ${ENH_ARGS[@]}"
     fi
 else
     echo -e "${YELLOW}Docker not available. Using local virtual environment...${NC}"
@@ -59,21 +79,21 @@ else
         pip install -r "$PROJECT_DIR/requirements.txt"
         echo -e "${GREEN}Dependencies installed.${NC}"
     fi
-    export PYTHONPATH="$PROJECT_DIR/src:$PYTHONPATH"
-    GUI_MODULE="$PROJECT_DIR/src/fll_sim/gui/main_gui.py"
-    if [ ! -f "$GUI_MODULE" ]; then
-        echo -e "${RED}GUI module not found at: $GUI_MODULE${NC}"
-        echo -e "${YELLOW}Running setup to create GUI components...${NC}"
-        python "$PROJECT_DIR/setup.py" --no-examples
-    fi
-    echo -e "${GREEN}Launching FLL-Sim GUI...${NC}"
-    echo -e "${BLUE}You can close this terminal window after the GUI opens.${NC}"
-    cd "$PROJECT_DIR" && python -c "
-import sys
-sys.path.insert(0, 'src')
-from fll_sim.gui.main_gui import main
-main()
-" "$@"
+        export PYTHONPATH="$PROJECT_DIR/src:$PYTHONPATH"
+        echo -e "${GREEN}Launching FLL-Sim Enhanced GUI...${NC}"
+        echo -e "${BLUE}You can close this terminal window after the GUI opens.${NC}"
+        # Build enhanced launcher arguments
+        ENH_ARGS=("--season" "$SEASON")
+        if [ -n "$MAT_PDF_URL" ]; then
+            ENH_ARGS+=("--mat-pdf-url" "$MAT_PDF_URL" "--mat-pdf-page" "$MAT_PDF_PAGE" "--mat-pdf-dpi" "$MAT_PDF_DPI")
+            [ -n "$MAT_PDF_PAGE_LABEL" ] && ENH_ARGS+=("--mat-pdf-page-label" "$MAT_PDF_PAGE_LABEL")
+            [ -n "$MAT_PDF_TOC_TITLE" ] && ENH_ARGS+=("--mat-pdf-toc-title" "$MAT_PDF_TOC_TITLE")
+        elif [ -n "$MAT_URL" ]; then
+            ENH_ARGS+=("--mat-url" "$MAT_URL")
+        fi
+        # Pass through any extra args (e.g., --exit-after)
+        ENH_ARGS+=("$@")
+        cd "$PROJECT_DIR" && python -u launch_gui_enhanced.py "${ENH_ARGS[@]}"
 fi
 
 echo -e "${GREEN}FLL-Sim GUI session ended.${NC}"
