@@ -56,6 +56,8 @@ def main() -> None:
         kind = entry.get("type", entry.get("format", "image")).lower()
         page = int(entry.get("page", 0))
         dpi = int(entry.get("dpi", 300))
+        page_label = entry.get("page_label")
+        toc_title = entry.get("toc_title")
         if not season or not url:
             print(f"Skipping invalid entry: {entry}")
             continue
@@ -64,7 +66,14 @@ def main() -> None:
         out_file = out_dir / "mat.png"
         print(f"Downloading {season} from {url} (type={kind}) ...")
         if kind == "pdf":
-            fetch_mat_pdf(url, out_file, page=page, dpi=dpi)
+            fetch_mat_pdf(
+                url,
+                out_file,
+                page=page,
+                dpi=dpi,
+                page_label=page_label,
+                toc_title=toc_title,
+            )
         else:
             fetch_mat_image(url, out_file)
         count += 1
@@ -73,5 +82,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
     main()

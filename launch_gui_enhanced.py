@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (QApplication, QCheckBox,  # noqa: E402
 from fll_sim.assets.mats import get_mat_for_season  # noqa: E402
 from fll_sim.environment.game_map import GameMap  # noqa: E402
 from fll_sim.scripts.fetch_mat import fetch_mat_image  # noqa: E402
+from fll_sim.scripts.fetch_mat import fetch_mat_pdf
 from fll_sim.visualization.simulator_view import SimulatorView  # noqa: E402
 
 
@@ -78,6 +79,36 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument(
+        "--mat-pdf-url",
+        default=None,
+        help=(
+            "Remote URL to mat PDF. Rasterizes to PNG and caches under "
+            "assets/mats/<season>/mat.png"
+        ),
+    )
+    p.add_argument(
+        "--mat-pdf-page",
+        type=int,
+        default=0,
+        help="PDF page index to rasterize (default 0)",
+    )
+    p.add_argument(
+        "--mat-pdf-page-label",
+        default=None,
+        help="PDF page label to select (overrides index if found)",
+    )
+    p.add_argument(
+        "--mat-pdf-toc-title",
+        default=None,
+        help="PDF TOC title to select (overrides index if found)",
+    )
+    p.add_argument(
+        "--mat-pdf-dpi",
+        type=int,
+        default=300,
+        help="DPI for PDF rasterization (default 300)",
+    )
+    p.add_argument(
         "--px-per-mm",
         type=float,
         default=2.0,
@@ -115,7 +146,7 @@ def main() -> None:
     # Resolve mat image
     mat_arg: Optional[str] = args.mat_path
     mat_path = Path(mat_arg) if mat_arg else None
-    if not mat_path and args.mat_url:
+    if not mat_path and (args.mat_url or args.mat_pdf_url):
         # Cache under assets/mats/<season>/mat.png
         cache_dir = (
             project_root
@@ -126,8 +157,22 @@ def main() -> None:
         cache_dir.mkdir(parents=True, exist_ok=True)
         mat_path = cache_dir / "mat.png"
         try:
-            print(f"Downloading mat from {args.mat_url}...")
-            fetch_mat_image(url=args.mat_url, out_path=mat_path)
+            if args.mat_pdf_url:
+                print(
+                    f"Downloading mat PDF from {args.mat_pdf_url} "
+                    f"(page={args.mat_pdf_page}, dpi={args.mat_pdf_dpi})..."
+                )
+                fetch_mat_pdf(
+                    url=args.mat_pdf_url,
+                    out_path=mat_path,
+                    page=args.mat_pdf_page,
+                    dpi=args.mat_pdf_dpi,
+                    page_label=args.mat_pdf_page_label,
+                    toc_title=args.mat_pdf_toc_title,
+                )
+            else:
+                print(f"Downloading mat from {args.mat_url}...")
+                fetch_mat_image(url=args.mat_url, out_path=mat_path)
             print(f"Mat cached to {mat_path}")
         except Exception as e:  # noqa: BLE001
             print(f"Warning: Failed to download mat: {e}")

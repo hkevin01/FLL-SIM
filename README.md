@@ -249,6 +249,57 @@ fll-sim-gui --exit-after 5
 
 Use `--headless` (or env `FLL_SIM_HEADLESS=1`) for CI and container runs.
 
+### Mat Backgrounds: Images & PDFs
+
+You can provide a mat image or PDF for the GUI background.
+
+- Direct image URL (PNG/JPG):
+	- `python launch_gui_enhanced.py --season latest --mat-url https://example.com/mat.png`
+- Direct PDF URL with rasterization:
+	- `python launch_gui_enhanced.py --season latest --mat-pdf-url https://example.com/mat.pdf --mat-pdf-page 0 --mat-pdf-dpi 300`
+	- Optional selectors:
+		- `--mat-pdf-page-label <label>` (uses PDF page label, if present)
+		- `--mat-pdf-toc-title <title>` (uses PDF Table of Contents title, if present)
+
+Downloaded mats are cached under `assets/mats/<season>/mat.png`.
+
+### Batch Download via Manifest
+
+Use the manifest downloader to grab multiple seasons into `assets/mats/`:
+
+```yaml
+# manifest.yml
+- season: 2024-submerged
+	url: https://example.com/2024-mat.pdf
+	type: pdf
+	page: 0
+	dpi: 300
+	# Optional selectors (if available in the PDF):
+	# page_label: "Mat"
+	# toc_title: "Field Mat"
+- season: 2023-masterpiece
+	url: https://example.com/2023-mat.png
+	type: image
+```
+
+Run:
+
+```bash
+python -m fll_sim.scripts.fetch_all_mats --manifest manifest.yml
+```
+
+### Season Mat Sizes
+
+Default physical size is used when exact season sizes aren’t provided. You can override sizes in `configs/profiles/defaults.yaml`:
+
+```yaml
+mat_sizes:
+	2024-submerged: [2362.0, 1143.0]
+	2023-masterpiece: [2362.0, 1143.0]
+```
+
+These values are in millimeters: `[width_mm, height_mm]`.
+
 ## 🤝 Contributing
 
 1. Fork the repository

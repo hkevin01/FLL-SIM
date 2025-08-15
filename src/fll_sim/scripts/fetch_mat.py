@@ -80,6 +80,8 @@ def fetch_mat_pdf(
     *,
     page: int = 0,
     dpi: int = 300,
+    page_label: str | None = None,
+    toc_title: str | None = None,
     timeout: float = 30.0,
 ) -> Path:
     """
@@ -116,17 +118,42 @@ def fetch_mat_pdf(
 
     # Open with PyMuPDF
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    if page < 0 or page >= doc.page_count:
+
+    # Resolve page number
+    target_page = page
+    if page_label is not None:
+        # Find page with matching label (if available)
+        for i in range(doc.page_count):
+            try:
+                lbl = doc.load_page(i).label  # type: ignore[attr-defined]
+            except Exception:
+                lbl = None
+            if lbl and str(lbl).strip() == str(page_label).strip():
+                target_page = i
+                break
+    elif toc_title is not None:
+        # Search table of contents; fall back silently if unavailable
+        toc = None
+        try:
+            toc = doc.getToC(simple=True)  # type: ignore[attr-defined]
+        except Exception:
+            toc = None
+        if toc:
+            for _lvl, title, pgnum in toc:
+                if str(title).strip() == str(toc_title).strip():
+                    target_page = max(0, int(pgnum) - 1)
+                    break
+
+    if target_page < 0 or target_page >= doc.page_count:
         raise ValueError(
-            "Page index {page} out of range for PDF with "
-            f"{doc.page_count} pages"
+            "Page index out of range for PDF with " f"{doc.page_count} pages"
         )
-    pg = doc.load_page(page)
+    pg = doc.load_page(target_page)
 
     # Compute matrix for DPI
     zoom = dpi / 72.0  # 72 DPI is base
     mat = fitz.Matrix(zoom, zoom)
-    pix = pg.get_pixmap(matrix=mat, alpha=False)
+    pix = pg.get_pixmap(matrix=mat, alpha=False)  # type: ignore[attr-defined]
 
     # Convert pixmap to PIL Image and save as PNG
     img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)

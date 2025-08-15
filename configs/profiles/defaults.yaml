@@ -36,3 +36,8 @@ advanced:
     guided_tutorials: false
     competition_timer: true
     scoring_penalties: true
+
+# Optional mat size overrides (in mm). Uncomment and edit as needed.
+# mat_sizes:
+#   2024-submerged: [2362.0, 1143.0]
+#   2023-masterpiece: [2362.0, 1143.0]
