@@ -66,10 +66,11 @@ class SimulatorView(QGraphicsView):
         )
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
 
-        # Fit the whole mat in view initially
-        self.fitInView(
-            self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio
-        )
+        # Fit the whole mat in view initially (use background item bounds)
+        if bg_item is not None:
+            self.fitInView(
+                bg_item.boundingRect(), Qt.AspectRatioMode.KeepAspectRatio
+            )
 
     def _add_map_elements(self) -> None:
         """Add obstacles, color zones, and other map elements to the scene."""
@@ -105,10 +106,18 @@ class SimulatorView(QGraphicsView):
     def resizeEvent(self, event):
         """Keep the whole mat visible on resize."""
         super().resizeEvent(event)
-        # Keep the whole mat visible
-        self.fitInView(
-            self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio
+        # Keep the whole mat visible (use background item bounds if available)
+        bg = (
+            self._background.get_graphics_item()
+            if hasattr(self, "_background")
+            else None
         )
+        if bg is not None:
+            self.fitInView(bg, Qt.AspectRatioMode.KeepAspectRatio)
+        else:
+            self.fitInView(
+                self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio
+            )
 
     def get_background_renderer(self) -> BackgroundRenderer:
         """Access to the background renderer for additional configuration."""

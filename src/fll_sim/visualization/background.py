@@ -19,6 +19,12 @@ class BackgroundConfig:
     width_mm: float = 2400.0
     height_mm: float = 1200.0
 
+    # Image scale mode for mats:
+    # - 'contain': keep aspect, fit fully inside, may letterbox
+    # - 'cover':   keep aspect, fill fully, center-crop overflow (default)
+    # - 'stretch': ignore aspect, stretch to exact target
+    scale_mode: str = "cover"
+
     # Visual properties
     background_color: QColor = field(
         default_factory=lambda: QColor(240, 240, 240)
@@ -71,28 +77,74 @@ class BackgroundRenderer:
         if image.isNull():
             return False
 
-        # Scale image to maintain aspect ratio within config dimensions
+        # Scale image to target dimensions per config
         pixmap = QPixmap.fromImage(image)
-        self._pixmap = self._scale_image_to_fit(pixmap)
+        self._pixmap = self._scale_image_to_target(pixmap)
         return True
 
-    def _scale_image_to_fit(self, pixmap: QPixmap) -> QPixmap:
-        """Scale pixmap to fit within config dimensions maintaining aspect."""
+    def _scale_image_to_target(self, pixmap: QPixmap) -> QPixmap:
+        """Scale pixmap to the configured table size using selected mode.
+
+        Modes:
+        - contain: Fit entirely inside target, keep aspect (may leave margins)
+        - cover:   Fill target while keeping aspect, then center-crop (default)
+        - stretch: Directly scale to target, ignore aspect
+        """
         target_w = int(self._cfg.width_mm)
         target_h = int(self._cfg.height_mm)
 
-        # Calculate scaling to fit within target while maintaining aspect
+        if target_w <= 0 or target_h <= 0:
+            return pixmap
+
+        mode = (self._cfg.scale_mode or "cover").lower()
+
+        if mode == "stretch":
+            return pixmap.scaled(
+                target_w,
+                target_h,
+                Qt.AspectRatioMode.IgnoreAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+
+        # Compute scale preserving aspect ratio
         scale_w = target_w / pixmap.width()
         scale_h = target_h / pixmap.height()
-        scale = min(scale_w, scale_h)
+        if mode == "contain":
+            scale = min(scale_w, scale_h)
+        else:  # cover (default)
+            scale = max(scale_w, scale_h)
 
-        new_w = int(pixmap.width() * scale)
-        new_h = int(pixmap.height() * scale)
+        new_w = max(1, int(round(pixmap.width() * scale)))
+        new_h = max(1, int(round(pixmap.height() * scale)))
 
-        return pixmap.scaled(
-            new_w, new_h,
+        scaled = pixmap.scaled(
+            new_w,
+            new_h,
             Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation
+            Qt.TransformationMode.SmoothTransformation,
+        )
+
+        if mode == "contain":
+            # Optionally center on a canvas to exactly match target
+            canvas = QPixmap(target_w, target_h)
+            canvas.fill(self._cfg.background_color)
+            painter = QPainter(canvas)
+            x = (target_w - new_w) // 2
+            y = (target_h - new_h) // 2
+            painter.drawPixmap(x, y, scaled)
+            painter.end()
+            return canvas
+
+        # cover: center-crop to target
+        if new_w == target_w and new_h == target_h:
+            return scaled
+        x = max(0, (new_w - target_w) // 2)
+        y = max(0, (new_h - target_h) // 2)
+        return scaled.copy(
+            x,
+            y,
+            min(target_w, new_w - x),
+            min(target_h, new_h - y),
         )
 
     def create_graphics_item(self) -> QGraphicsPixmapItem:
@@ -107,12 +159,9 @@ class BackgroundRenderer:
 
         item = QGraphicsPixmapItem(self._pixmap)
         item.setZValue(-1000)  # Behind everything else
-
-        # Center the image in the coordinate system
-        item.setOffset(
-            -self._pixmap.width() / 2,
-            -self._pixmap.height() / 2
-        )
+        # Anchor top-left at (0,0) to match scene rect
+        item.setOffset(0, 0)
+        item.setPos(0, 0)
 
         self._graphics_item = item
         return item

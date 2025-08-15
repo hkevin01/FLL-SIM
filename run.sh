@@ -28,20 +28,15 @@ MAT_PDF_DPI=${MAT_PDF_DPI:-300}
 MAT_PDF_PAGE_LABEL=${MAT_PDF_PAGE_LABEL:-}
 MAT_PDF_TOC_TITLE=${MAT_PDF_TOC_TITLE:-}
 
-# Prefer running in Docker unless FORCE_LOCAL is set
-if [ -z "$FORCE_LOCAL" ] && command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_DIR/docker/docker-compose.yml" ]; then
-    echo -e "${BLUE}Docker detected. Starting GUI in container...${NC}"
-    # Use the GUI service if defined, else fallback to headless with display passthrough
-    if docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" config --services | grep -q "gui"; then
-        # Allow local X11 connections for containers (best-effort, ignore failures)
-        if command -v xhost >/dev/null 2>&1; then
-            xhost +local:root >/dev/null 2>&1 || true
-            xhost +local:$(id -un) >/dev/null 2>&1 || true
-        fi
-                docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up --build gui
-    else
-        # Fallback: run runtime image with host display
-        xhost +local:root >/dev/null 2>&1 || true
+## Prefer Docker unless FORCE_LOCAL is set; if image missing, fall back to local
+if [ -z "$FORCE_LOCAL" ] && command -v docker >/dev/null 2>&1; then
+        if docker image inspect fll-sim:latest >/dev/null 2>&1; then
+                echo -e "${BLUE}Docker detected. Starting Enhanced GUI in a container...${NC}"
+                # Allow local X11 connections for containers (best-effort, ignore failures)
+                if command -v xhost >/dev/null 2>&1; then
+                        xhost +local:root >/dev/null 2>&1 || true
+                        xhost +local:$(id -un) >/dev/null 2>&1 || true
+                fi
                 # Build enhanced launcher command
                 ENH_ARGS=("launch_gui_enhanced.py" "--season" "$SEASON")
                 if [ -n "$MAT_PDF_URL" ]; then
@@ -53,16 +48,22 @@ if [ -z "$FORCE_LOCAL" ] && command -v docker >/dev/null 2>&1 && [ -f "$PROJECT_
                 fi
                 # Pass through any extra args
                 ENH_ARGS+=("$@")
-        docker run --rm \
-          -e DISPLAY=$DISPLAY \
-          -v /tmp/.X11-unix:/tmp/.X11-unix \
-          -v "$PROJECT_DIR":"/app" \
-          -w /app \
-          fll-sim:latest \
-          bash -lc \
+                docker run --rm \
+                    -e DISPLAY=$DISPLAY \
+                    -v /tmp/.X11-unix:/tmp/.X11-unix \
+                    -v "$PROJECT_DIR":"/app" \
+                    -w /app \
+                    fll-sim:latest \
+                    bash -lc \
                         ". venv/bin/activate 2>/dev/null || true; export PYTHONPATH=/app/src:$PYTHONPATH; python -u ${ENH_ARGS[@]}"
-    fi
-else
+                echo -e "${GREEN}FLL-Sim GUI session ended.${NC}"
+                exit 0
+        else
+                echo -e "${YELLOW}Docker image 'fll-sim:latest' not found. Falling back to local mode.${NC}"
+        fi
+fi
+
+## Local fallback
     echo -e "${YELLOW}Docker not available. Using local virtual environment...${NC}"
     # Local venv fallback
     if [ ! -d "$PROJECT_DIR/fll-sim-env" ]; then
@@ -93,7 +94,6 @@ else
         fi
         # Pass through any extra args (e.g., --exit-after)
         ENH_ARGS+=("$@")
-        cd "$PROJECT_DIR" && python -u launch_gui_enhanced.py "${ENH_ARGS[@]}"
-fi
+    cd "$PROJECT_DIR" && python -u launch_gui_enhanced.py "${ENH_ARGS[@]}"
 
 echo -e "${GREEN}FLL-Sim GUI session ended.${NC}"
