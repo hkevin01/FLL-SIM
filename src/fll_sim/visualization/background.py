@@ -59,6 +59,7 @@ class BackgroundRenderer:
         """
         self._cfg = config or BackgroundConfig()
         self._pixmap: Optional[QPixmap] = None
+        self._source_pixmap: Optional[QPixmap] = None  # unscaled image
         self._graphics_item: Optional[QGraphicsPixmapItem] = None
 
     def load_image(self, image_path: Path) -> bool:
@@ -79,7 +80,11 @@ class BackgroundRenderer:
 
         # Scale image to target dimensions per config
         pixmap = QPixmap.fromImage(image)
+        self._source_pixmap = pixmap
         self._pixmap = self._scale_image_to_target(pixmap)
+        # If graphics item exists, update it immediately
+        if self._graphics_item is not None:
+            self._graphics_item.setPixmap(self._pixmap)
         return True
 
     def _scale_image_to_target(self, pixmap: QPixmap) -> QPixmap:
@@ -165,6 +170,33 @@ class BackgroundRenderer:
 
         self._graphics_item = item
         return item
+
+    # --- New API for dynamic scaling ---
+    def set_scale_mode(self, mode: str) -> None:
+        """Set image scale mode and refresh current pixmap/item.
+
+        Args:
+            mode: 'cover', 'contain', or 'stretch'
+        """
+        mode = (mode or "cover").lower().strip()
+        if mode not in ("cover", "contain", "stretch"):
+            return
+        if self._cfg.scale_mode == mode:
+            return
+        self._cfg.scale_mode = mode
+        # Recompute pixmap
+        if self._source_pixmap is not None:
+            self._pixmap = self._scale_image_to_target(self._source_pixmap)
+        else:
+            # No source image; rebuild procedural background
+            self._pixmap = self._create_procedural_background()
+        # Update graphics item in place
+        if self._graphics_item is not None and self._pixmap is not None:
+            self._graphics_item.setPixmap(self._pixmap)
+
+    def get_scale_mode(self) -> str:
+        """Return the current scale mode."""
+        return (self._cfg.scale_mode or "cover").lower()
 
     def _create_procedural_background(self) -> QPixmap:
         """Create procedural FLL table background."""

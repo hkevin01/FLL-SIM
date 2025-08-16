@@ -199,6 +199,17 @@
 				"scripts/install-system-pygame.sh"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Test Enhanced GUI",
+			"type": "shell",
+			"command": "./fll-sim-env/bin/python",
+			"args": [
+				"launch_gui_enhanced.py",
+				"--exit-after",
+				"3"
+			],
+			"group": "test"
 		}
 	]
 }

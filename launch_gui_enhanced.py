@@ -154,12 +154,12 @@ def main() -> None:
     obstacles = [
         Obstacle(
             name="Sample Obstacle 1",
-            x=600, y=300, width=40, height=40,
+            x=600, y=300, width=25, height=25,
             color=(150, 75, 0)
         ),
         Obstacle(
             name="Sample Obstacle 2",
-            x=1800, y=900, width=50, height=30,
+            x=1800, y=900, width=30, height=20,
             color=(100, 50, 25)
         ),
     ]
